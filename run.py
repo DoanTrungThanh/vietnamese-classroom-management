@@ -27,13 +27,31 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     debug = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
 
-    # Initialize database
+    # Initialize database and create admin user
     with app.app_context():
         try:
             db.create_all()
             print("Database initialized successfully!")
+
+            # Create default admin user if not exists
+            admin = User.query.filter_by(username='admin').first()
+            if not admin:
+                admin = User(
+                    username='admin',
+                    email='admin@qllhttbb.vn',
+                    full_name='Administrator',
+                    role='admin',
+                    is_active=True
+                )
+                admin.set_password('admin123')
+                db.session.add(admin)
+                db.session.commit()
+                print("✅ Admin user created: admin/admin123")
+            else:
+                print("✅ Admin user already exists")
+
         except Exception as e:
-            print(f"Database initialization: {e}")
+            print(f"Database initialization error: {e}")
 
     print("Starting Vietnamese Classroom Management System...")
     print(f"Server running on port: {port}")
