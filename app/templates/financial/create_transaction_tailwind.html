@@ -1,0 +1,233 @@
+{% extends "base_tailwind.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">
+            <i class="fas fa-plus text-blue-500 mr-2"></i>
+            Thêm giao dịch tài chính
+        </h1>
+        <a href="{{ url_for('financial.transactions') }}" 
+           class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition duration-200">
+            <i class="fas fa-arrow-left mr-2"></i>Quay lại
+        </a>
+    </div>
+
+    <!-- Form -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <form method="POST" class="space-y-6">
+            {{ form.hidden_tag() }}
+            
+            <!-- Transaction Type -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-exchange-alt text-blue-500 mr-1"></i>
+                        {{ form.transaction_type.label.text }} *
+                    </label>
+                    {{ form.transaction_type(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500", id="transaction_type") }}
+                    {% if form.transaction_type.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.transaction_type.errors[0] }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-calendar text-green-500 mr-1"></i>
+                        {{ form.transaction_date.label.text }} *
+                    </label>
+                    {{ form.transaction_date(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500") }}
+                    {% if form.transaction_date.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.transaction_date.errors[0] }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Title and Amount -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-tag text-purple-500 mr-1"></i>
+                        {{ form.title.label.text }} *
+                    </label>
+                    {{ form.title(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500", placeholder="Nhập tiêu đề giao dịch") }}
+                    {% if form.title.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.title.errors[0] }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-money-bill text-green-500 mr-1"></i>
+                        {{ form.amount.label.text }} *
+                    </label>
+                    <div class="relative">
+                        {{ form.amount(class="w-full px-3 py-2 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500", placeholder="0") }}
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <span class="text-gray-500 sm:text-sm">VNĐ</span>
+                        </div>
+                    </div>
+                    {% if form.amount.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.amount.errors[0] }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Category and Payment Method -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-folder text-orange-500 mr-1"></i>
+                        {{ form.category.label.text }} *
+                    </label>
+                    {{ form.category(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500", id="category") }}
+                    {% if form.category.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.category.errors[0] }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-credit-card text-indigo-500 mr-1"></i>
+                        {{ form.payment_method.label.text }} *
+                    </label>
+                    {{ form.payment_method(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500") }}
+                    {% if form.payment_method.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.payment_method.errors[0] }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Receipt Number and Vendor/Payer -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-receipt text-gray-500 mr-1"></i>
+                        {{ form.receipt_number.label.text }}
+                    </label>
+                    {{ form.receipt_number(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500", placeholder="Số hóa đơn (tùy chọn)") }}
+                    {% if form.receipt_number.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.receipt_number.errors[0] }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2" id="vendor_payer_label">
+                        <i class="fas fa-user text-blue-500 mr-1"></i>
+                        {{ form.vendor_payer.label.text }}
+                    </label>
+                    {{ form.vendor_payer(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500", placeholder="Nhà cung cấp/Người trả", id="vendor_payer") }}
+                    {% if form.vendor_payer.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.vendor_payer.errors[0] }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-align-left text-gray-500 mr-1"></i>
+                    {{ form.description.label.text }}
+                </label>
+                {{ form.description(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500", rows="3", placeholder="Mô tả chi tiết về giao dịch (tùy chọn)") }}
+                {% if form.description.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.description.errors[0] }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Notes -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-sticky-note text-yellow-500 mr-1"></i>
+                    {{ form.notes.label.text }}
+                </label>
+                {{ form.notes(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500", rows="2", placeholder="Ghi chú thêm (tùy chọn)") }}
+                {% if form.notes.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.notes.errors[0] }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                <a href="{{ url_for('financial.transactions') }}" 
+                   class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition duration-200">
+                    Hủy
+                </a>
+                {{ form.submit(class="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition duration-200") }}
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const transactionType = document.getElementById('transaction_type');
+    const category = document.getElementById('category');
+    const vendorPayerLabel = document.getElementById('vendor_payer_label');
+    const vendorPayer = document.getElementById('vendor_payer');
+    
+    function updateFormBasedOnType() {
+        const type = transactionType.value;
+        
+        // Update category options based on transaction type
+        const incomeCategories = [
+            ['tuition', 'Học phí'],
+            ['donation', 'Quyên góp'],
+            ['event', 'Sự kiện'],
+            ['other_income', 'Thu nhập khác']
+        ];
+        
+        const expenseCategories = [
+            ['office_supplies', 'Văn phòng phẩm'],
+            ['utilities', 'Tiện ích'],
+            ['maintenance', 'Bảo trì'],
+            ['salary', 'Lương'],
+            ['other_expense', 'Chi phí khác']
+        ];
+        
+        // Clear current options
+        category.innerHTML = '';
+        
+        // Add appropriate options
+        const categories = type === 'income' ? incomeCategories : expenseCategories;
+        categories.forEach(([value, text]) => {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = text;
+            category.appendChild(option);
+        });
+        
+        // Update vendor/payer label and placeholder
+        if (type === 'income') {
+            vendorPayerLabel.innerHTML = '<i class="fas fa-user text-blue-500 mr-1"></i>Người trả';
+            vendorPayer.placeholder = 'Tên người/tổ chức trả tiền';
+        } else {
+            vendorPayerLabel.innerHTML = '<i class="fas fa-store text-blue-500 mr-1"></i>Nhà cung cấp';
+            vendorPayer.placeholder = 'Tên nhà cung cấp/cửa hàng';
+        }
+    }
+    
+    // Update form when transaction type changes
+    transactionType.addEventListener('change', updateFormBasedOnType);
+    
+    // Initialize form
+    updateFormBasedOnType();
+    
+    // Format amount input
+    const amountInput = document.querySelector('input[name="amount"]');
+    amountInput.addEventListener('input', function(e) {
+        // Remove non-numeric characters except decimal point
+        let value = e.target.value.replace(/[^0-9.]/g, '');
+        
+        // Ensure only one decimal point
+        const parts = value.split('.');
+        if (parts.length > 2) {
+            value = parts[0] + '.' + parts.slice(1).join('');
+        }
+        
+        e.target.value = value;
+    });
+});
+</script>
+{% endblock %}

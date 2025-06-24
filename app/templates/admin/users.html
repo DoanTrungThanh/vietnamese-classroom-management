@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-users"></i> Quản lý người dùng</h2>
+            <a href="{{ url_for('admin.create_user') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Thêm người dùng
+            </a>
+        </div>
+        <hr>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <input type="text" id="searchInput" class="form-control" placeholder="Tìm kiếm người dùng...">
+    </div>
+    <div class="col-md-6">
+        <select class="form-select" id="roleFilter">
+            <option value="">Tất cả vai trò</option>
+            <option value="admin">Admin</option>
+            <option value="manager">Quản sinh</option>
+            <option value="teacher">Giáo viên</option>
+        </select>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped" id="usersTable">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Tên đăng nhập</th>
+                                <th>Họ và tên</th>
+                                <th>Email</th>
+                                <th>Số điện thoại</th>
+                                <th>Vai trò</th>
+                                <th>Trạng thái</th>
+                                <th>Ngày tạo</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users.items %}
+                            <tr>
+                                <td>{{ loop.index + (users.page - 1) * users.per_page }}</td>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.full_name }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>{{ user.phone or '-' }}</td>
+                                <td>
+                                    {% if user.role == 'admin' %}
+                                        <span class="badge bg-danger">Admin</span>
+                                    {% elif user.role == 'manager' %}
+                                        <span class="badge bg-warning">Quản sinh</span>
+                                    {% elif user.role == 'teacher' %}
+                                        <span class="badge bg-info">Giáo viên</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user.is_active %}
+                                        <span class="badge bg-success">Hoạt động</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Vô hiệu hóa</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ user.created_at.strftime('%d/%m/%Y') }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary" title="Chỉnh sửa">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        {% if user.is_active %}
+                                        <button class="btn btn-outline-warning" title="Vô hiệu hóa">
+                                            <i class="fas fa-ban"></i>
+                                        </button>
+                                        {% else %}
+                                        <button class="btn btn-outline-success" title="Kích hoạt">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        {% endif %}
+                                        <button class="btn btn-outline-danger" title="Xóa" 
+                                                onclick="return confirmDelete('Bạn có chắc chắn muốn xóa người dùng này?')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if users.pages > 1 %}
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        {% if users.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('admin.users', page=users.prev_num) }}">Trước</a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for page_num in users.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != users.page %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('admin.users', page=page_num) }}">{{ page_num }}</a>
+                                </li>
+                                {% else %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                                {% endif %}
+                            {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if users.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('admin.users', page=users.next_num) }}">Sau</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Search functionality
+    searchTable('searchInput', 'usersTable');
+    
+    // Role filter
+    document.getElementById('roleFilter').addEventListener('change', function() {
+        var filter = this.value.toLowerCase();
+        var table = document.getElementById('usersTable');
+        var rows = table.getElementsByTagName('tr');
+        
+        for (var i = 1; i < rows.length; i++) {
+            var roleCell = rows[i].getElementsByTagName('td')[5];
+            if (roleCell) {
+                var roleText = roleCell.textContent.toLowerCase();
+                if (filter === '' || roleText.includes(filter)) {
+                    rows[i].style.display = '';
+                } else {
+                    rows[i].style.display = 'none';
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-calendar-alt"></i> Lịch dạy tuần</h2>
+            <div class="btn-group">
+                <a href="{{ url_for('calendar.calendar_view', year=prev_year, week=prev_week) }}" 
+                   class="btn btn-outline-primary">
+                    <i class="fas fa-chevron-left"></i> Tuần trước
+                </a>
+                <a href="{{ url_for('calendar.calendar_view') }}" class="btn btn-primary">
+                    Tuần hiện tại
+                </a>
+                <a href="{{ url_for('calendar.calendar_view', year=next_year, week=next_week) }}" 
+                   class="btn btn-outline-primary">
+                    Tuần sau <i class="fas fa-chevron-right"></i>
+                </a>
+                <a href="{{ url_for('calendar.month_view') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-calendar"></i> Xem tháng
+                </a>
+            </div>
+        </div>
+        <div class="text-muted">
+            Tuần {{ current_week }}, {{ current_year }} 
+            ({{ week_start.strftime('%d/%m/%Y') }} - {{ week_end.strftime('%d/%m/%Y') }})
+        </div>
+        <hr>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-bordered mb-0 calendar-table">
+                        <thead class="table-primary">
+                            <tr>
+                                <th width="10%" class="text-center">Tiết</th>
+                                {% for day in range(1, 8) %}
+                                <th width="12.8%" class="text-center">
+                                    {% if day == 1 %}Thứ 2{% elif day == 2 %}Thứ 3{% elif day == 3 %}Thứ 4{% elif day == 4 %}Thứ 5{% elif day == 5 %}Thứ 6{% elif day == 6 %}Thứ 7{% else %}Chủ nhật{% endif %}
+                                    <br>
+                                    <small class="fw-normal">
+                                        {{ calendar_data[day].date_str }}
+                                        {% if calendar_data[day].is_today %}
+                                            <span class="badge bg-warning text-dark">Hôm nay</span>
+                                        {% endif %}
+                                    </small>
+                                </th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Buổi sáng -->
+                            <tr>
+                                <td class="text-center fw-bold table-primary">
+                                    <div class="fw-bold">Buổi sáng</div>
+                                    <small>07:30 - 11:30</small>
+                                </td>
+                                {% for day in range(1, 8) %}
+                                <td class="calendar-cell p-1" style="height: 120px; vertical-align: top;">
+                                    {% if 'morning' in calendar_data[day].periods %}
+                                        {% for item in calendar_data[day].periods['morning'] %}
+                                        <div class="schedule-item-calendar mb-1 p-2 border rounded morning-session
+                                                    {% if item.has_attendance %}bg-success text-white{% else %}bg-light{% endif %}"
+                                             onclick="viewScheduleDetail({{ item.schedule.id }}, '{{ item.date.strftime('%Y-%m-%d') }}')">
+                                            <div class="fw-bold small">{{ item.schedule.class_obj.name }}</div>
+                                            <div class="small">{{ item.schedule.teacher.full_name }}</div>
+                                            <div class="small">{{ item.schedule.time_range }}</div>
+                                            {% if item.schedule.subject %}
+                                            <div class="small text-muted">{{ item.schedule.subject }}</div>
+                                            {% endif %}
+                                            {% if item.has_attendance %}
+                                            <div class="small">
+                                                <i class="fas fa-check-circle"></i> Đã điểm danh ({{ item.attendance_count }})
+                                            </div>
+                                            {% else %}
+                                            <div class="small text-warning">
+                                                <i class="fas fa-clock"></i> Chưa điểm danh
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </td>
+                                {% endfor %}
+                            </tr>
+
+                            <!-- Buổi chiều -->
+                            <tr>
+                                <td class="text-center fw-bold table-success">
+                                    <div class="fw-bold">Buổi chiều</div>
+                                    <small>13:30 - 17:30</small>
+                                </td>
+                                {% for day in range(1, 8) %}
+                                <td class="calendar-cell p-1" style="height: 120px; vertical-align: top;">
+                                    {% if 'afternoon' in calendar_data[day].periods %}
+                                        {% for item in calendar_data[day].periods['afternoon'] %}
+                                        <div class="schedule-item-calendar mb-1 p-2 border rounded afternoon-session
+                                                    {% if item.has_attendance %}bg-success text-white{% else %}bg-light{% endif %}"
+                                             onclick="viewScheduleDetail({{ item.schedule.id }}, '{{ item.date.strftime('%Y-%m-%d') }}')">
+                                            <div class="fw-bold small">{{ item.schedule.class_obj.name }}</div>
+                                            <div class="small">{{ item.schedule.teacher.full_name }}</div>
+                                            <div class="small">{{ item.schedule.time_range }}</div>
+                                            {% if item.schedule.subject %}
+                                            <div class="small text-muted">{{ item.schedule.subject }}</div>
+                                            {% endif %}
+                                            {% if item.has_attendance %}
+                                            <div class="small">
+                                                <i class="fas fa-check-circle"></i> Đã điểm danh ({{ item.attendance_count }})
+                                            </div>
+                                            {% else %}
+                                            <div class="small text-warning">
+                                                <i class="fas fa-clock"></i> Chưa điểm danh
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </td>
+                                {% endfor %}
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick actions -->
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h6><i class="fas fa-bolt"></i> Thao tác nhanh</h6>
+                <div class="row">
+                    <div class="col-md-3">
+                        <a href="{{ url_for('calendar.day_view', date_str=calendar_data[1].date.strftime('%Y-%m-%d')) }}" 
+                           class="btn btn-outline-primary btn-sm w-100">
+                            <i class="fas fa-eye"></i> Xem chi tiết hôm nay
+                        </a>
+                    </div>
+                    {% if current_user.is_admin() or current_user.is_manager() %}
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-success btn-sm w-100" onclick="showAddScheduleModal()">
+                            <i class="fas fa-plus"></i> Thêm tiết học
+                        </button>
+                    </div>
+                    {% endif %}
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-info btn-sm w-100" onclick="exportWeekSchedule()">
+                            <i class="fas fa-download"></i> Xuất lịch tuần
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-warning btn-sm w-100" onclick="showAttendanceReport()">
+                            <i class="fas fa-chart-bar"></i> Báo cáo điểm danh
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Schedule Detail Modal -->
+<div class="modal fade" id="scheduleDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Chi tiết tiết học</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="scheduleDetailContent">
+                <!-- Content loaded via AJAX -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" id="attendanceBtn" style="display: none;">
+                    <i class="fas fa-user-check"></i> Điểm danh
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function viewScheduleDetail(scheduleId, dateStr) {
+    fetch(`/calendar/schedule/${scheduleId}/detail?date=${dateStr}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('scheduleDetailContent').innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Thông tin tiết học</h6>
+                        <p><strong>Lớp:</strong> ${data.class_name}</p>
+                        <p><strong>Giáo viên:</strong> ${data.teacher_name}</p>
+                        <p><strong>Ngày:</strong> ${data.date_display}</p>
+                        <p><strong>Thời gian:</strong> ${data.time_range}</p>
+                        <p><strong>Môn học:</strong> ${data.subject || 'Chưa có'}</p>
+                        <p><strong>Phòng:</strong> ${data.room || 'Chưa có'}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Thông tin điểm danh</h6>
+                        <p><strong>Sĩ số:</strong> ${data.total_students}</p>
+                        <p><strong>Có mặt:</strong> <span class="text-success">${data.present_count}</span></p>
+                        <p><strong>Vắng có lý do:</strong> <span class="text-warning">${data.absent_with_reason_count}</span></p>
+                        <p><strong>Vắng không lý do:</strong> <span class="text-danger">${data.absent_without_reason_count}</span></p>
+                        <p><strong>Chưa điểm danh:</strong> <span class="text-muted">${data.not_taken_count}</span></p>
+                    </div>
+                </div>
+                ${data.lesson_content ? `
+                <hr>
+                <div class="row">
+                    <div class="col-12">
+                        <h6>Nội dung bài giảng</h6>
+                        <p>${data.lesson_content}</p>
+                    </div>
+                </div>
+                ` : ''}
+            `;
+            
+            // Show attendance button if user can take attendance
+            const attendanceBtn = document.getElementById('attendanceBtn');
+            if (data.can_take_attendance) {
+                attendanceBtn.style.display = 'inline-block';
+                attendanceBtn.onclick = () => {
+                    window.location.href = `/teacher/attendance/${scheduleId}?date=${dateStr}`;
+                };
+            } else {
+                attendanceBtn.style.display = 'none';
+            }
+            
+            var modal = new bootstrap.Modal(document.getElementById('scheduleDetailModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('danger', 'Không thể tải thông tin tiết học');
+        });
+}
+
+function exportWeekSchedule() {
+    const year = {{ current_year }};
+    const week = {{ current_week }};
+    window.open(`/calendar/export/week?year=${year}&week=${week}`, '_blank');
+}
+
+function showAttendanceReport() {
+    // Implementation for attendance report
+    showAlert('info', 'Chức năng báo cáo điểm danh đang được phát triển');
+}
+</script>
+
+<style>
+.calendar-table {
+    font-size: 0.9rem;
+}
+
+.calendar-cell {
+    min-height: 120px;
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+.schedule-item-calendar {
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.8rem;
+}
+
+.schedule-item-calendar:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.schedule-item-calendar.bg-success:hover {
+    background-color: #198754 !important;
+}
+
+.schedule-item-calendar.bg-light:hover {
+    background-color: #e9ecef !important;
+}
+
+@media (max-width: 768px) {
+    .calendar-table {
+        font-size: 0.7rem;
+    }
+    
+    .calendar-cell {
+        min-height: 80px;
+        max-height: 80px;
+    }
+    
+    .schedule-item-calendar {
+        font-size: 0.7rem;
+        padding: 1px !important;
+    }
+}
+</style>
+{% endblock %}

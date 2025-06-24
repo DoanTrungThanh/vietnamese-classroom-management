@@ -1,0 +1,397 @@
+{% extends "base_tailwind.html" %}
+
+{% block content %}
+<!-- Header -->
+<div class="bg-white rounded-lg shadow-md p-6 mb-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 flex items-center">
+                <i class="fas fa-chalkboard text-orange-500 mr-3"></i>
+                Quản trị lớp học
+            </h1>
+            <p class="text-gray-600 mt-1">Quản lý toàn bộ lớp học trong hệ thống</p>
+        </div>
+        
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ url_for('admin.create_class') }}" 
+               class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center">
+                <i class="fas fa-plus mr-2"></i>
+                Thêm lớp học
+            </a>
+            <button onclick="exportData()" 
+                    class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center">
+                <i class="fas fa-download mr-2"></i>
+                Xuất Excel
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-chalkboard text-blue-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Tổng lớp học</p>
+                <p class="text-2xl font-bold text-gray-900">{{ classes|length }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-users text-green-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Tổng học sinh</p>
+                <p class="text-2xl font-bold text-gray-900">{{ classes|sum(attribute='student_count') }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-check-circle text-purple-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Lớp hoạt động</p>
+                <p class="text-2xl font-bold text-gray-900">{{ classes|selectattr('is_active')|list|length }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-user-tie text-orange-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Quản sinh</p>
+                <p class="text-2xl font-bold text-gray-900">{{ classes|map(attribute='manager')|select|unique|list|length }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filter -->
+<div class="bg-white rounded-lg shadow-md p-6 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Tìm kiếm</label>
+            <div class="relative">
+                <input type="text" id="searchInput" placeholder="Tìm theo tên lớp..." 
+                       class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Trạng thái</label>
+            <select id="statusFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                <option value="">Tất cả</option>
+                <option value="active">Hoạt động</option>
+                <option value="inactive">Không hoạt động</option>
+            </select>
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Sắp xếp</label>
+            <select id="sortBy" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                <option value="name">Tên lớp</option>
+                <option value="student_count">Số học sinh</option>
+                <option value="created_at">Ngày tạo</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- Classes Table -->
+<div class="bg-white rounded-lg shadow-md overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">Danh sách lớp học</h3>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Lớp học
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Sĩ số
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Quản sinh
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Trạng thái
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Ngày tạo
+                    </th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Thao tác
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200" id="classesTableBody">
+                {% for class in classes %}
+                <tr class="hover:bg-gray-50 transition-colors duration-200 class-row" 
+                    data-name="{{ class.name.lower() }}" 
+                    data-status="{{ 'active' if class.is_active else 'inactive' }}"
+                    data-student-count="{{ class.student_count }}"
+                    data-created="{{ class.created_at.strftime('%Y-%m-%d') if class.created_at else '' }}">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 h-10 w-10">
+                                <div class="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center">
+                                    <i class="fas fa-chalkboard text-orange-600"></i>
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">{{ class.name }}</div>
+                                <div class="text-sm text-gray-500">{{ class.description or 'Không có mô tả' }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <i class="fas fa-users text-gray-400 mr-2"></i>
+                            <span class="text-sm text-gray-900">{{ class.student_count }} học sinh</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ class.manager.full_name if class.manager else 'Chưa phân công' }}</div>
+                        <div class="text-sm text-gray-500">{{ class.manager.email if class.manager else '' }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if class.is_active %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <i class="fas fa-check-circle mr-1"></i>
+                            Hoạt động
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            <i class="fas fa-times-circle mr-1"></i>
+                            Không hoạt động
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ class.created_at.strftime('%d/%m/%Y') if class.created_at else 'Không có thông tin' }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div class="flex items-center justify-end space-x-2">
+                            <button onclick="viewClassDetails({{ class.id }})" 
+                                    class="text-blue-600 hover:text-blue-900 p-2 rounded-lg hover:bg-blue-50 transition-colors duration-200" 
+                                    title="Xem chi tiết">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <a href="{{ url_for('manager.students', class=class.id) }}" 
+                               class="text-green-600 hover:text-green-900 p-2 rounded-lg hover:bg-green-50 transition-colors duration-200" 
+                               title="Quản lý học sinh">
+                                <i class="fas fa-users"></i>
+                            </a>
+                            <button onclick="notify.info('Tính năng đang phát triển')"
+                                    class="text-orange-600 hover:text-orange-900 p-2 rounded-lg hover:bg-orange-50 transition-colors duration-200"
+                                    title="Chỉnh sửa">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="deleteClass({{ class.id }}, '{{ class.name }}')" 
+                                    class="text-red-600 hover:text-red-900 p-2 rounded-lg hover:bg-red-50 transition-colors duration-200" 
+                                    title="Xóa">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        {% if not classes %}
+        <div class="text-center py-12">
+            <i class="fas fa-chalkboard text-gray-400 text-4xl mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Chưa có lớp học nào</h3>
+            <p class="text-gray-500 mb-4">Bắt đầu bằng cách tạo lớp học đầu tiên</p>
+            <a href="{{ url_for('admin.create_class') }}" 
+               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700">
+                <i class="fas fa-plus mr-2"></i>
+                Tạo lớp học
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Class Details Modal -->
+<div id="classDetailsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-96 overflow-y-auto">
+            <div class="flex justify-between items-center p-6 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Chi tiết lớp học</h3>
+                <button onclick="closeClassDetailsModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="classDetailsContent" class="p-6">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Search functionality
+document.getElementById('searchInput').addEventListener('input', function() {
+    filterClasses();
+});
+
+document.getElementById('statusFilter').addEventListener('change', function() {
+    filterClasses();
+});
+
+document.getElementById('sortBy').addEventListener('change', function() {
+    sortClasses();
+});
+
+function filterClasses() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const statusFilter = document.getElementById('statusFilter').value;
+    const rows = document.querySelectorAll('.class-row');
+    
+    rows.forEach(row => {
+        const name = row.dataset.name;
+        const status = row.dataset.status;
+        
+        const matchesSearch = name.includes(searchTerm);
+        const matchesStatus = !statusFilter || status === statusFilter;
+        
+        if (matchesSearch && matchesStatus) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+function sortClasses() {
+    const sortBy = document.getElementById('sortBy').value;
+    const tbody = document.getElementById('classesTableBody');
+    const rows = Array.from(tbody.querySelectorAll('.class-row'));
+    
+    rows.sort((a, b) => {
+        let aVal, bVal;
+        
+        switch(sortBy) {
+            case 'name':
+                aVal = a.dataset.name;
+                bVal = b.dataset.name;
+                break;
+            case 'student_count':
+                aVal = parseInt(a.dataset.studentCount);
+                bVal = parseInt(b.dataset.studentCount);
+                break;
+            case 'created_at':
+                aVal = new Date(a.dataset.created);
+                bVal = new Date(b.dataset.created);
+                break;
+        }
+        
+        if (sortBy === 'student_count' || sortBy === 'created_at') {
+            return bVal - aVal; // Descending
+        } else {
+            return aVal.localeCompare(bVal); // Ascending
+        }
+    });
+    
+    rows.forEach(row => tbody.appendChild(row));
+}
+
+function viewClassDetails(classId) {
+    document.getElementById('classDetailsModal').classList.remove('hidden');
+    document.getElementById('classDetailsContent').innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin text-orange-500"></i> Đang tải...</div>';
+    
+    // Load class details via AJAX
+    fetch(`/manager/class/${classId}/details`)
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('classDetailsContent').innerHTML = html;
+        })
+        .catch(error => {
+            document.getElementById('classDetailsContent').innerHTML = '<div class="text-center py-4 text-red-500"><i class="fas fa-exclamation-triangle"></i> Lỗi khi tải thông tin</div>';
+        });
+}
+
+function closeClassDetailsModal() {
+    document.getElementById('classDetailsModal').classList.add('hidden');
+}
+
+function deleteClass(classId, className) {
+    if (confirm(`Bạn có chắc chắn muốn xóa lớp "${className}"?`)) {
+        fetch(`/admin/class/${classId}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                notify.success('Xóa lớp học thành công');
+                location.reload();
+            } else {
+                notify.error(data.message || 'Có lỗi xảy ra');
+            }
+        })
+        .catch(error => {
+            notify.error('Có lỗi xảy ra khi xóa lớp học');
+        });
+    }
+}
+
+function exportData() {
+    window.location.href = '{{ url_for("admin.export_classes") }}';
+}
+
+// Close modal when clicking outside
+document.getElementById('classDetailsModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeClassDetailsModal();
+    }
+});
+
+// Animation on load
+document.addEventListener('DOMContentLoaded', function() {
+    const rows = document.querySelectorAll('.class-row');
+    rows.forEach((row, index) => {
+        row.style.opacity = '0';
+        row.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            row.style.transition = 'all 0.3s ease-out';
+            row.style.opacity = '1';
+            row.style.transform = 'translateY(0)';
+        }, index * 50);
+    });
+});
+</script>
+{% endblock %}

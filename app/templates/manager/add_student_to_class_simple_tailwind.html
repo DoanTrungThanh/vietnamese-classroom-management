@@ -1,0 +1,198 @@
+{% extends "base_tailwind.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">{{ title }}</h1>
+                <p class="text-gray-600 mt-1">Chọn học sinh để thêm vào lớp học</p>
+            </div>
+            <a href="{{ url_for('manager.classes') }}" 
+               class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Quay lại
+            </a>
+        </div>
+    </div>
+
+    <!-- Class Info -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <div class="flex items-start">
+            <i class="fas fa-chalkboard text-blue-500 mt-0.5 mr-2"></i>
+            <div>
+                <h4 class="text-sm font-medium text-blue-800">Thông tin lớp học</h4>
+                <p class="text-sm text-blue-700 mt-1">
+                    <strong>Lớp:</strong> {{ class_obj.name }} | 
+                    <strong>Quản sinh:</strong> {{ class_obj.manager.full_name if class_obj.manager else 'Chưa phân công' }}
+                </p>
+                <p class="text-sm text-blue-600 mt-1">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Học sinh sẽ được thêm vào tất cả lịch dạy của lớp này
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <form method="POST">
+            <!-- Search -->
+            <div class="mb-6">
+                <div class="relative">
+                    <input type="text" id="searchInput" placeholder="Tìm kiếm học sinh..." 
+                           class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                </div>
+            </div>
+
+            <!-- Students List -->
+            {% if available_students %}
+            <div class="space-y-3 mb-6" id="studentsList">
+                {% for student in available_students %}
+                <div class="student-item border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors duration-200">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" name="student_ids" value="{{ student.id }}" 
+                               class="w-4 h-4 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500">
+                        <div class="ml-3 flex-1">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="font-medium text-gray-900">{{ student.full_name }}</h3>
+                                    <p class="text-sm text-gray-600">Mã HS: {{ student.student_code }}</p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        Có thể thêm
+                                    </span>
+                                </div>
+                            </div>
+                            {% if student.parent_name %}
+                            <p class="text-sm text-gray-500 mt-1">
+                                <i class="fas fa-user mr-1"></i>
+                                {{ student.parent_name }}
+                                {% if student.parent_phone %}
+                                - {{ student.parent_phone }}
+                                {% endif %}
+                            </p>
+                            {% endif %}
+                            
+                            <!-- Show current enrollments if available -->
+                            {% if student.schedule_enrollments %}
+                            {% set current_enrollments = student.schedule_enrollments|selectattr('is_active')|list %}
+                            {% if current_enrollments %}
+                            <div class="mt-2">
+                                <p class="text-xs text-gray-500 mb-1">Đang học:</p>
+                                <div class="flex flex-wrap gap-1">
+                                    {% for enrollment in current_enrollments[:3] %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-800">
+                                        {{ enrollment.schedule.class_obj.name }} - {{ enrollment.schedule.day_name }}
+                                    </span>
+                                    {% endfor %}
+                                    {% if current_enrollments|length > 3 %}
+                                    <span class="text-xs text-gray-500">+{{ current_enrollments|length - 3 }} khác</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% endif %}
+                        </div>
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                <div class="text-sm text-gray-600">
+                    <span id="selectedCount">0</span> học sinh được chọn
+                </div>
+                <div class="flex space-x-3">
+                    <button type="button" onclick="selectAll()" 
+                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200">
+                        <i class="fas fa-check-double mr-2"></i>
+                        Chọn tất cả
+                    </button>
+                    <button type="button" onclick="clearAll()" 
+                            class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors duration-200">
+                        <i class="fas fa-times mr-2"></i>
+                        Bỏ chọn
+                    </button>
+                    <button type="submit" 
+                            class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition-colors duration-200">
+                        <i class="fas fa-plus mr-2"></i>
+                        Thêm vào lớp
+                    </button>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-12">
+                <i class="fas fa-users text-gray-400 text-4xl mb-4"></i>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Không có học sinh nào</h3>
+                <p class="text-gray-600">Chưa có học sinh nào trong hệ thống.</p>
+                <a href="{{ url_for('manager.create_student') }}" 
+                   class="inline-flex items-center mt-4 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors duration-200">
+                    <i class="fas fa-plus mr-2"></i>
+                    Tạo học sinh mới
+                </a>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkboxes = document.querySelectorAll('input[name="student_ids"]');
+    const selectedCount = document.getElementById('selectedCount');
+    const searchInput = document.getElementById('searchInput');
+    
+    // Update selected count
+    function updateSelectedCount() {
+        const checked = document.querySelectorAll('input[name="student_ids"]:checked').length;
+        selectedCount.textContent = checked;
+    }
+    
+    // Add event listeners to checkboxes
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedCount);
+    });
+    
+    // Search functionality
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const studentItems = document.querySelectorAll('.student-item');
+        
+        studentItems.forEach(item => {
+            const text = item.textContent.toLowerCase();
+            if (text.includes(searchTerm)) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+});
+
+function selectAll() {
+    const visibleCheckboxes = document.querySelectorAll('.student-item:not([style*="display: none"]) input[name="student_ids"]');
+    visibleCheckboxes.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    updateSelectedCount();
+}
+
+function clearAll() {
+    const checkboxes = document.querySelectorAll('input[name="student_ids"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    updateSelectedCount();
+}
+
+function updateSelectedCount() {
+    const checked = document.querySelectorAll('input[name="student_ids"]:checked').length;
+    document.getElementById('selectedCount').textContent = checked;
+}
+</script>
+{% endblock %}

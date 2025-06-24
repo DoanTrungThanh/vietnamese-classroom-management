@@ -1,0 +1,308 @@
+{% extends "base_tailwind.html" %}
+
+{% block content %}
+<!-- Header -->
+<div class="bg-white rounded-lg shadow-md p-6 mb-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 flex items-center">
+                <i class="fas fa-user-check text-orange-500 mr-3"></i>
+                Điểm danh lớp {{ schedule.class_obj.name }}
+            </h1>
+            <p class="text-gray-600 mt-1">{{ today.strftime('%A, %d/%m/%Y') }} - {{ schedule.time_range }}</p>
+        </div>
+        
+        <div class="flex items-center space-x-2">
+            <a href="{{ url_for('calendar.calendar_view') }}" 
+               class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center">
+                <i class="fas fa-calendar mr-2"></i>
+                Lịch dạy
+            </a>
+            <button onclick="markAllPresent()" 
+                    class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center">
+                <i class="fas fa-check-double mr-2"></i>
+                Có mặt tất cả
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Schedule Info -->
+<div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-md p-6 mb-6 text-white">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="text-center">
+            <div class="text-2xl font-bold">{{ schedule.class_obj.name }}</div>
+            <div class="text-blue-200">Lớp học</div>
+        </div>
+        <div class="text-center">
+            <div class="text-2xl font-bold">{{ students|length }}</div>
+            <div class="text-blue-200">Học sinh</div>
+        </div>
+        <div class="text-center">
+            <div class="text-2xl font-bold">{{ schedule.time_range }}</div>
+            <div class="text-blue-200">Thời gian</div>
+        </div>
+        <div class="text-center">
+            <div class="text-2xl font-bold">{{ schedule.subject or 'Chưa xác định' }}</div>
+            <div class="text-blue-200">Môn học</div>
+        </div>
+    </div>
+</div>
+
+<!-- Attendance Form -->
+<form id="attendanceForm" method="POST" action="{{ url_for('teacher.attendance', schedule_id=schedule.id) }}" class="space-y-6">
+    {% if form and form.csrf_token %}
+        {{ form.csrf_token }}
+    {% else %}
+        <input type="hidden" name="csrf_token" value=""/>
+    {% endif %}
+    <!-- Quick Actions -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <i class="fas fa-bolt text-orange-500 mr-2"></i>
+            Thao tác nhanh
+        </h3>
+        <div class="flex flex-wrap gap-3">
+            <button type="button" onclick="markAllStatus('present')" 
+                    class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors duration-200">
+                <i class="fas fa-check mr-2"></i>
+                Đánh dấu tất cả có mặt
+            </button>
+            <button type="button" onclick="markAllStatus('absent')" 
+                    class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors duration-200">
+                <i class="fas fa-times mr-2"></i>
+                Đánh dấu tất cả vắng mặt
+            </button>
+            <button type="button" onclick="clearAll()" 
+                    class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors duration-200">
+                <i class="fas fa-eraser mr-2"></i>
+                Xóa tất cả
+            </button>
+        </div>
+    </div>
+
+    <!-- Students List -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                <i class="fas fa-users text-blue-500 mr-2"></i>
+                Danh sách học sinh ({{ students|length }} học sinh)
+            </h3>
+        </div>
+        
+        <div class="p-6">
+            {% if students %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for student in students %}
+                <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors duration-200 student-card" 
+                     data-student-id="{{ student.id }}">
+                    <div class="flex items-center mb-3">
+                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-user text-blue-600"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-medium text-gray-900">{{ student.full_name }}</h4>
+                            <p class="text-sm text-gray-500">{{ student.student_id or 'Chưa có mã' }}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Attendance Status -->
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700">Trạng thái:</label>
+                        <div class="flex space-x-2">
+                            <label class="flex items-center">
+                                <input type="radio" name="attendance_{{ student.id }}" value="present" 
+                                       {% if existing_attendance.get(student.id) and existing_attendance[student.id].status == 'present' %}checked{% endif %}
+                                       class="sr-only attendance-radio">
+                                <div class="attendance-option present flex items-center justify-center w-8 h-8 rounded-full border-2 border-green-300 cursor-pointer hover:bg-green-50 transition-colors duration-200">
+                                    <i class="fas fa-check text-green-600 hidden"></i>
+                                </div>
+                                <span class="ml-2 text-sm text-green-700">Có mặt</span>
+                            </label>
+                        </div>
+                        <div class="flex space-x-2">
+                            <label class="flex items-center">
+                                <input type="radio" name="attendance_{{ student.id }}" value="absent_without_reason"
+                                       {% if existing_attendance.get(student.id) and existing_attendance[student.id].status == 'absent_without_reason' %}checked{% endif %}
+                                       class="sr-only attendance-radio">
+                                <div class="attendance-option absent flex items-center justify-center w-8 h-8 rounded-full border-2 border-red-300 cursor-pointer hover:bg-red-50 transition-colors duration-200">
+                                    <i class="fas fa-times text-red-600 hidden"></i>
+                                </div>
+                                <span class="ml-2 text-sm text-red-700">Vắng mặt</span>
+                            </label>
+                        </div>
+                        <div class="flex space-x-2">
+                            <label class="flex items-center">
+                                <input type="radio" name="attendance_{{ student.id }}" value="absent_with_reason"
+                                       {% if existing_attendance.get(student.id) and existing_attendance[student.id].status == 'absent_with_reason' %}checked{% endif %}
+                                       class="sr-only attendance-radio">
+                                <div class="attendance-option late flex items-center justify-center w-8 h-8 rounded-full border-2 border-yellow-300 cursor-pointer hover:bg-yellow-50 transition-colors duration-200">
+                                    <i class="fas fa-clock text-yellow-600 hidden"></i>
+                                </div>
+                                <span class="ml-2 text-sm text-yellow-700">Vắng có lý do</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Notes -->
+                    <div class="mt-3">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Ghi chú:</label>
+                        <textarea name="notes_{{ student.id }}" rows="2" 
+                                  placeholder="Ghi chú (tùy chọn)"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500">{{ existing_attendance.get(student.id).notes if existing_attendance.get(student.id) else '' }}</textarea>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-12">
+                <i class="fas fa-user-slash text-gray-400 text-4xl mb-4"></i>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Không có học sinh</h3>
+                <p class="text-gray-500">Lớp học này chưa có học sinh nào được đăng ký</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Submit Button -->
+    {% if students %}
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex justify-between items-center">
+            <div class="text-sm text-gray-600">
+                <span id="attendanceCount">0</span> / {{ students|length }} học sinh đã được điểm danh
+            </div>
+            <button type="submit" 
+                    class="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg transition-colors duration-200 font-medium">
+                <i class="fas fa-save mr-2"></i>
+                Lưu điểm danh
+            </button>
+        </div>
+    </div>
+    {% endif %}
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize attendance options
+    initializeAttendanceOptions();
+    updateAttendanceCount();
+    
+    // Form submission - Allow normal form submission
+    document.getElementById('attendanceForm').addEventListener('submit', function(e) {
+        const submitButton = this.querySelector('button[type="submit"]');
+        const originalText = submitButton.innerHTML;
+
+        // Show loading state
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang lưu...';
+
+        // Allow normal form submission to proceed
+        // Don't prevent default - let the form submit normally
+    });
+});
+
+function initializeAttendanceOptions() {
+    // Handle attendance option clicks
+    document.querySelectorAll('.attendance-option').forEach(option => {
+        option.addEventListener('click', function() {
+            const radio = this.parentElement.querySelector('input[type="radio"]');
+            radio.checked = true;
+            updateAttendanceVisual(radio);
+            updateAttendanceCount();
+        });
+    });
+    
+    // Initialize visual state for existing selections
+    document.querySelectorAll('.attendance-radio:checked').forEach(radio => {
+        updateAttendanceVisual(radio);
+    });
+}
+
+function updateAttendanceVisual(radio) {
+    // Clear all options in this group
+    const groupName = radio.name;
+    document.querySelectorAll(`input[name="${groupName}"]`).forEach(r => {
+        const option = r.parentElement.querySelector('.attendance-option');
+        const icon = option.querySelector('i');
+        
+        option.classList.remove('bg-green-100', 'bg-red-100', 'bg-yellow-100', 'border-green-500', 'border-red-500', 'border-yellow-500');
+        icon.classList.add('hidden');
+    });
+    
+    // Highlight selected option
+    const selectedOption = radio.parentElement.querySelector('.attendance-option');
+    const selectedIcon = selectedOption.querySelector('i');
+    
+    if (radio.value === 'present') {
+        selectedOption.classList.add('bg-green-100', 'border-green-500');
+    } else if (radio.value === 'absent_without_reason') {
+        selectedOption.classList.add('bg-red-100', 'border-red-500');
+    } else if (radio.value === 'absent_with_reason') {
+        selectedOption.classList.add('bg-yellow-100', 'border-yellow-500');
+    }
+    
+    selectedIcon.classList.remove('hidden');
+}
+
+function updateAttendanceCount() {
+    const checkedRadios = document.querySelectorAll('.attendance-radio:checked');
+    document.getElementById('attendanceCount').textContent = checkedRadios.length;
+}
+
+function markAllStatus(status) {
+    let targetValue = status;
+    if (status === 'absent') {
+        targetValue = 'absent_without_reason';
+    } else if (status === 'late') {
+        targetValue = 'absent_with_reason';
+    }
+
+    document.querySelectorAll('.attendance-radio').forEach(radio => {
+        if (radio.value === targetValue) {
+            radio.checked = true;
+            updateAttendanceVisual(radio);
+        }
+    });
+    updateAttendanceCount();
+    notify.info(`Đã đánh dấu tất cả học sinh ${status === 'present' ? 'có mặt' : status === 'absent' ? 'vắng mặt' : 'có lý do'}`);
+}
+
+function clearAll() {
+    document.querySelectorAll('.attendance-radio').forEach(radio => {
+        radio.checked = false;
+        const option = radio.parentElement.querySelector('.attendance-option');
+        const icon = option.querySelector('i');
+        
+        option.classList.remove('bg-green-100', 'bg-red-100', 'bg-yellow-100', 'border-green-500', 'border-red-500', 'border-yellow-500');
+        icon.classList.add('hidden');
+    });
+    
+    document.querySelectorAll('textarea[name^="notes_"]').forEach(textarea => {
+        textarea.value = '';
+    });
+    
+    updateAttendanceCount();
+    notify.info('Đã xóa tất cả điểm danh');
+}
+
+function markAllPresent() {
+    markAllStatus('present');
+}
+
+// Animation on load
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.student-card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            card.style.transition = 'all 0.3s ease-out';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 50);
+    });
+});
+</script>
+{% endblock %}

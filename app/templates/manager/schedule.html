@@ -1,0 +1,353 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-calendar-alt"></i> Lịch dạy</h2>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addScheduleModal">
+                <i class="fas fa-plus"></i> Thêm tiết học
+            </button>
+        </div>
+        <hr>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered schedule-table">
+                        <thead>
+                            <tr>
+                                <th width="12%">Tiết</th>
+                                <th width="12.5%">Thứ 2</th>
+                                <th width="12.5%">Thứ 3</th>
+                                <th width="12.5%">Thứ 4</th>
+                                <th width="12.5%">Thứ 5</th>
+                                <th width="12.5%">Thứ 6</th>
+                                <th width="12.5%">Thứ 7</th>
+                                <th width="12.5%">Chủ nhật</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Buổi sáng -->
+                            <tr style="height: 120px;">
+                                <td class="text-center font-weight-bold bg-light">
+                                    <div class="fw-bold text-primary">Buổi sáng</div>
+                                    <small class="text-muted">07:30 - 11:30</small>
+                                </td>
+                                {% for day in range(1, 8) %}
+                                <td class="schedule-cell" data-day="{{ day }}" data-session="morning">
+                                    {% if day in schedule_table and 'morning' in schedule_table[day] %}
+                                        {% for schedule in schedule_table[day]['morning'] %}
+                                        <div class="schedule-item morning-session mb-1" data-schedule-id="{{ schedule.id }}"
+                                             onclick="showScheduleDetails({{ schedule.id }})">
+                                            <div class="class-name fw-bold">{{ schedule.class_obj.name }}</div>
+                                            <div class="teacher-name text-muted">{{ schedule.teacher.full_name }}</div>
+                                            <div class="time-range small">{{ schedule.time_range }}</div>
+                                            {% if schedule.subject %}
+                                            <div class="subject small">{{ schedule.subject }}</div>
+                                            {% endif %}
+                                        </div>
+                                        {% endfor %}
+                                    {% endif %}
+                                    <button class="btn btn-sm btn-outline-primary add-schedule-btn mt-1"
+                                            onclick="addSchedule({{ day }}, 'morning')"
+                                            title="Thêm lịch buổi sáng">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </td>
+                                {% endfor %}
+                            </tr>
+
+                            <!-- Buổi chiều -->
+                            <tr style="height: 120px;">
+                                <td class="text-center font-weight-bold bg-light">
+                                    <div class="fw-bold text-success">Buổi chiều</div>
+                                    <small class="text-muted">13:30 - 17:30</small>
+                                </td>
+                                {% for day in range(1, 8) %}
+                                <td class="schedule-cell" data-day="{{ day }}" data-session="afternoon">
+                                    {% if day in schedule_table and 'afternoon' in schedule_table[day] %}
+                                        {% for schedule in schedule_table[day]['afternoon'] %}
+                                        <div class="schedule-item afternoon-session mb-1" data-schedule-id="{{ schedule.id }}"
+                                             onclick="showScheduleDetails({{ schedule.id }})">
+                                            <div class="class-name fw-bold">{{ schedule.class_obj.name }}</div>
+                                            <div class="teacher-name text-muted">{{ schedule.teacher.full_name }}</div>
+                                            <div class="time-range small">{{ schedule.time_range }}</div>
+                                            {% if schedule.subject %}
+                                            <div class="subject small">{{ schedule.subject }}</div>
+                                            {% endif %}
+                                        </div>
+                                        {% endfor %}
+                                    {% endif %}
+                                    <button class="btn btn-sm btn-outline-success add-schedule-btn mt-1"
+                                            onclick="addSchedule({{ day }}, 'afternoon')"
+                                            title="Thêm lịch buổi chiều">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </td>
+                                {% endfor %}
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Schedule Modal -->
+<div class="modal fade" id="addScheduleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Thêm tiết học</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('manager.create_schedule') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Lớp học</label>
+                        <select name="class_id" class="form-select" required>
+                            <option value="">Chọn lớp học</option>
+                            {% for class in classes %}
+                            <option value="{{ class.id }}">{{ class.name }} - {{ class.block_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Giáo viên</label>
+                        <select name="teacher_id" class="form-select" required>
+                            <option value="">Chọn giáo viên</option>
+                            <!-- Will be populated via AJAX based on class selection -->
+                        </select>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Thứ</label>
+                            <select name="day_of_week" class="form-select" required>
+                                <option value="">Chọn thứ</option>
+                                <option value="1">Thứ 2</option>
+                                <option value="2">Thứ 3</option>
+                                <option value="3">Thứ 4</option>
+                                <option value="4">Thứ 5</option>
+                                <option value="5">Thứ 6</option>
+                                <option value="6">Thứ 7</option>
+                                <option value="7">Chủ nhật</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Khung giờ</label>
+                            <select name="session" class="form-select" required>
+                                <option value="">Chọn khung giờ</option>
+                                <option value="morning">Buổi sáng (07:30 - 11:30)</option>
+                                <option value="afternoon">Buổi chiều (13:30 - 17:30)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Giờ bắt đầu</label>
+                            <input type="time" name="start_time" class="form-control" required>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Giờ kết thúc</label>
+                            <input type="time" name="end_time" class="form-control" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Môn học</label>
+                            <input type="text" name="subject" class="form-control" placeholder="Ví dụ: Toán">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Phòng học</label>
+                            <input type="text" name="room" class="form-control" placeholder="Ví dụ: A101">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Schedule Details Modal -->
+<div class="modal fade" id="scheduleDetailsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Chi tiết tiết học</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="scheduleDetailsContent">
+                <!-- Content will be loaded via AJAX -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-warning" onclick="editSchedule()">Chỉnh sửa</button>
+                <button type="button" class="btn btn-danger" onclick="deleteSchedule()">Xóa</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+.schedule-cell {
+    position: relative;
+    vertical-align: top;
+    padding: 8px;
+    min-height: 120px;
+}
+
+.schedule-item {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 8px;
+    border-radius: 8px;
+    margin-bottom: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.schedule-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.morning-session {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.afternoon-session {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.add-schedule-btn {
+    width: 100%;
+    border-style: dashed;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+}
+
+.add-schedule-btn:hover {
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+.class-name {
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.teacher-name {
+    font-size: 0.8rem;
+    opacity: 0.9;
+}
+
+.time-range {
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+
+.subject {
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+
+.schedule-table th {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    text-align: center;
+    font-weight: 600;
+}
+
+.schedule-table td {
+    border: 1px solid #dee2e6;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showScheduleDetails(scheduleId) {
+    // Load schedule details via AJAX
+    fetch(`/manager/schedule/${scheduleId}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('scheduleDetailsContent').innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Lớp:</strong> ${data.class_name}</p>
+                        <p><strong>Giáo viên:</strong> ${data.teacher_name}</p>
+                        <p><strong>Thời gian:</strong> ${data.day_name}, ${data.time_range}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Môn học:</strong> ${data.subject || 'Chưa có'}</p>
+                        <p><strong>Phòng:</strong> ${data.room || 'Chưa có'}</p>
+                        <p><strong>Sĩ số:</strong> ${data.student_count} học sinh</p>
+                    </div>
+                </div>
+            `;
+            var modal = new bootstrap.Modal(document.getElementById('scheduleDetailsModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('danger', 'Không thể tải thông tin tiết học');
+        });
+}
+
+function addSchedule(day, session) {
+    // Pre-fill the form with selected day and session
+    document.querySelector('select[name="day_of_week"]').value = day;
+    document.querySelector('select[name="session"]').value = session;
+
+    // Show the modal
+    var modal = new bootstrap.Modal(document.getElementById('addScheduleModal'));
+    modal.show();
+}
+
+// Load teachers when class is selected
+document.querySelector('select[name="class_id"]').addEventListener('change', function() {
+    var classId = this.value;
+    var teacherSelect = document.querySelector('select[name="teacher_id"]');
+
+    if (classId) {
+        // Load all active teachers
+        fetch('/manager/get_all_teachers')
+            .then(response => response.json())
+            .then(data => {
+                teacherSelect.innerHTML = '<option value="">Chọn giáo viên</option>';
+                data.teachers.forEach(teacher => {
+                    teacherSelect.innerHTML += `<option value="${teacher.id}">${teacher.full_name}</option>`;
+                });
+            })
+            .catch(error => {
+                console.error('Error loading teachers:', error);
+                if (window.notify) {
+                    notify.error('Không thể tải danh sách giáo viên');
+                }
+            });
+    } else {
+        teacherSelect.innerHTML = '<option value="">Chọn giáo viên</option>';
+    }
+});
+</script>
+{% endblock %}

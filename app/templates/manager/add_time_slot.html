@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-plus"></i> Thêm khung giờ</h2>
+            <a href="{{ url_for('manager.time_slots') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </a>
+        </div>
+        <hr>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-clock"></i> Thông tin khung giờ</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" class="needs-validation" novalidate>
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.name.label(class="form-label") }}
+                            {{ form.name(class="form-control") }}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.session_type.label(class="form-label") }}
+                            {{ form.session_type(class="form-select") }}
+                            {% if form.session_type.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.session_type.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.start_time.label(class="form-label") }}
+                            {{ form.start_time(class="form-control") }}
+                            {% if form.start_time.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.start_time.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.end_time.label(class="form-label") }}
+                            {{ form.end_time(class="form-control") }}
+                            {% if form.end_time.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.end_time.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control", rows="3") }}
+                        {% if form.description.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.description.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-end">
+                        <a href="{{ url_for('manager.time_slots') }}" class="btn btn-secondary me-2">
+                            <i class="fas fa-times"></i> Hủy
+                        </a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Card -->
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h6><i class="fas fa-eye"></i> Xem trước khung giờ</h6>
+            </div>
+            <div class="card-body">
+                <div id="preview-content">
+                    <div class="text-center text-muted">
+                        <i class="fas fa-clock fa-2x mb-2"></i>
+                        <p>Điền thông tin để xem trước khung giờ</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Real-time preview
+function updatePreview() {
+    const name = document.getElementById('name').value;
+    const sessionType = document.getElementById('session_type').value;
+    const startTime = document.getElementById('start_time').value;
+    const endTime = document.getElementById('end_time').value;
+    const description = document.getElementById('description').value;
+    
+    const previewContent = document.getElementById('preview-content');
+    
+    if (name && sessionType && startTime && endTime) {
+        const sessionNames = {
+            'morning': 'Buổi sáng',
+            'afternoon': 'Buổi chiều',
+            'evening': 'Buổi tối'
+        };
+        
+        const colors = {
+            'morning': '#ff6b35',
+            'afternoon': '#ff8c42',
+            'evening': '#ffa726'
+        };
+        
+        previewContent.innerHTML = `
+            <div class="card border-primary">
+                <div class="card-body">
+                    <h6 class="card-title" style="color: ${colors[sessionType]}">
+                        <i class="fas fa-clock"></i> ${name}
+                    </h6>
+                    <p class="card-text">
+                        <strong>Loại buổi:</strong> ${sessionNames[sessionType]}<br>
+                        <strong>Thời gian:</strong> ${startTime} - ${endTime}<br>
+                        ${description ? `<strong>Mô tả:</strong> ${description}<br>` : ''}
+                        <small class="text-muted">Tạo bởi: {{ current_user.full_name }}</small>
+                    </p>
+                </div>
+            </div>
+        `;
+    } else {
+        previewContent.innerHTML = `
+            <div class="text-center text-muted">
+                <i class="fas fa-clock fa-2x mb-2"></i>
+                <p>Điền thông tin để xem trước khung giờ</p>
+            </div>
+        `;
+    }
+}
+
+// Add event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    ['name', 'session_type', 'start_time', 'end_time', 'description'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener('input', updatePreview);
+            element.addEventListener('change', updatePreview);
+        }
+    });
+    
+    // Validate time range
+    const startTimeInput = document.getElementById('start_time');
+    const endTimeInput = document.getElementById('end_time');
+    
+    function validateTimeRange() {
+        if (startTimeInput.value && endTimeInput.value) {
+            if (startTimeInput.value >= endTimeInput.value) {
+                endTimeInput.setCustomValidity('Giờ kết thúc phải sau giờ bắt đầu');
+                notify.warning('Giờ kết thúc phải sau giờ bắt đầu');
+            } else {
+                endTimeInput.setCustomValidity('');
+            }
+        }
+    }
+    
+    startTimeInput.addEventListener('change', validateTimeRange);
+    endTimeInput.addEventListener('change', validateTimeRange);
+});
+</script>
+{% endblock %}

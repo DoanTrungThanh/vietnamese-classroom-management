@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-user-plus"></i> Thêm học sinh mới</h2>
+            <a href="{{ url_for('manager.students') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </a>
+        </div>
+        <hr>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" class="needs-validation" novalidate>
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.student_code.label(class="form-label") }}
+                            {{ form.student_code(class="form-control", placeholder="Ví dụ: HS001") }}
+                            {% for error in form.student_code.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                            <div class="form-text">Mã học sinh duy nhất</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.full_name.label(class="form-label") }}
+                            {{ form.full_name(class="form-control", placeholder="Họ và tên đầy đủ") }}
+                            {% for error in form.full_name.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.date_of_birth.label(class="form-label") }}
+                            {{ form.date_of_birth(class="form-control") }}
+                            {% for error in form.date_of_birth.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.class_id.label(class="form-label") }}
+                            {{ form.class_id(class="form-select") }}
+                            {% for error in form.class_id.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.address.label(class="form-label") }}
+                        {{ form.address(class="form-control", rows="3", placeholder="Địa chỉ thường trú") }}
+                        {% for error in form.address.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.parent_name.label(class="form-label") }}
+                            {{ form.parent_name(class="form-control", placeholder="Họ tên phụ huynh") }}
+                            {% for error in form.parent_name.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.parent_phone.label(class="form-label") }}
+                            {{ form.parent_phone(class="form-control", placeholder="Số điện thoại phụ huynh") }}
+                            {% for error in form.parent_phone.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.profile_url.label(class="form-label") }}
+                        {{ form.profile_url(class="form-control", placeholder="https://drive.google.com/...") }}
+                        {% for error in form.profile_url.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                        <div class="form-text">
+                            <i class="fas fa-info-circle"></i> 
+                            Đường dẫn đến hồ sơ học sinh trên Google Drive hoặc hệ thống nội bộ
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        {{ form.submit(class="btn btn-primary btn-lg") }}
+                        <a href="{{ url_for('manager.students') }}" class="btn btn-secondary btn-lg">Hủy</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <h6><i class="fas fa-info-circle"></i> Hướng dẫn thêm học sinh:</h6>
+            <ul class="mb-0">
+                <li><strong>Mã học sinh:</strong> Nhập mã duy nhất cho học sinh (ví dụ: HS001, 2024001)</li>
+                <li><strong>Lớp học:</strong> Chọn lớp mà học sinh sẽ theo học</li>
+                <li><strong>Thông tin phụ huynh:</strong> Cần thiết để liên lạc khi cần</li>
+                <li><strong>Đường dẫn hồ sơ:</strong> Link đến Google Drive hoặc hệ thống lưu trữ hồ sơ</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-generate student code based on class selection
+    var classSelect = document.querySelector('select[name="class_id"]');
+    var codeInput = document.querySelector('input[name="student_code"]');
+    
+    classSelect.addEventListener('change', function() {
+        if (this.value && !codeInput.value) {
+            // Get class info and generate code
+            var selectedOption = this.options[this.selectedIndex];
+            var className = selectedOption.text.split(' - ')[0];
+            var year = new Date().getFullYear();
+            var randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            codeInput.value = className + year + randomNum;
+        }
+    });
+    
+    // Format phone number
+    var phoneInput = document.querySelector('input[name="parent_phone"]');
+    phoneInput.addEventListener('input', function() {
+        var value = this.value.replace(/\D/g, '');
+        if (value.length > 0) {
+            if (value.length <= 10) {
+                this.value = value.replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3');
+            }
+        }
+    });
+    
+    // Validate profile URL
+    var urlInput = document.querySelector('input[name="profile_url"]');
+    urlInput.addEventListener('blur', function() {
+        var url = this.value;
+        if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+            this.value = 'https://' + url;
+        }
+    });
+});
+</script>
+{% endblock %}

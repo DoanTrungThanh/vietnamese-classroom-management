@@ -1,0 +1,245 @@
+{% extends "base_tailwind.html" %}
+
+{% block content %}
+<!-- Header -->
+<div class="bg-white rounded-lg shadow-md p-6 mb-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 flex items-center">
+                <i class="fas fa-user-plus text-orange-500 mr-3"></i>
+                Thêm người dùng mới
+            </h1>
+            <p class="text-gray-600 mt-1">Tạo tài khoản người dùng mới trong hệ thống</p>
+        </div>
+        
+        <div class="flex space-x-2">
+            <a href="{{ url_for('admin.users') }}" 
+               class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Quay lại
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Form -->
+<div class="bg-white rounded-lg shadow-md p-6">
+    <form method="POST" class="space-y-6">
+        {{ form.hidden_tag() }}
+        
+        <!-- Personal Information -->
+        <div class="border-b border-gray-200 pb-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Thông tin cá nhân</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-user text-blue-500 mr-1"></i>
+                        Họ và tên *
+                    </label>
+                    {{ form.full_name(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500", placeholder="Nhập họ và tên") }}
+                    {% if form.full_name.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.full_name.errors[0] }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-envelope text-green-500 mr-1"></i>
+                        Email *
+                    </label>
+                    {{ form.email(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500", placeholder="Nhập địa chỉ email") }}
+                    {% if form.email.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.email.errors[0] }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-phone text-purple-500 mr-1"></i>
+                        Số điện thoại
+                    </label>
+                    {{ form.phone(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500", placeholder="Nhập số điện thoại") }}
+                    {% if form.phone.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.phone.errors[0] }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-calendar text-indigo-500 mr-1"></i>
+                        Ngày sinh
+                    </label>
+                    {{ form.date_of_birth(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500") }}
+                    {% if form.date_of_birth.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.date_of_birth.errors[0] }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="mt-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-map-marker-alt text-red-500 mr-1"></i>
+                    Địa chỉ
+                </label>
+                {{ form.address(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500", rows="3", placeholder="Nhập địa chỉ") }}
+                {% if form.address.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.address.errors[0] }}</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Account Information -->
+        <div class="border-b border-gray-200 pb-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Thông tin tài khoản</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-user-circle text-blue-500 mr-1"></i>
+                        Tên đăng nhập *
+                    </label>
+                    {{ form.username(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500", placeholder="Nhập tên đăng nhập") }}
+                    {% if form.username.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.username.errors[0] }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-user-tag text-orange-500 mr-1"></i>
+                        Vai trò *
+                    </label>
+                    {{ form.role(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500") }}
+                    {% if form.role.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.role.errors[0] }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-lock text-red-500 mr-1"></i>
+                        Mật khẩu *
+                    </label>
+                    {{ form.password(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500", placeholder="Nhập mật khẩu") }}
+                    {% if form.password.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.password.errors[0] }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-lock text-red-500 mr-1"></i>
+                        Xác nhận mật khẩu *
+                    </label>
+                    {{ form.password_confirm(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500", placeholder="Nhập lại mật khẩu") }}
+                    {% if form.password_confirm.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.password_confirm.errors[0] }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Status -->
+        <div>
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Trạng thái</h3>
+            <div class="flex items-center">
+                {{ form.is_active(class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded") }}
+                <label for="{{ form.is_active.id }}" class="ml-2 block text-sm text-gray-900">
+                    Kích hoạt tài khoản
+                </label>
+            </div>
+        </div>
+        
+        <!-- Submit Buttons -->
+        <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+            <a href="{{ url_for('admin.users') }}" 
+               class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                <i class="fas fa-times mr-2"></i>
+                Hủy
+            </a>
+            <button type="submit" 
+                    class="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors duration-200">
+                <i class="fas fa-save mr-2"></i>
+                Tạo người dùng
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Password Strength Indicator -->
+<div class="bg-white rounded-lg shadow-md p-6 mt-6">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">Yêu cầu mật khẩu</h3>
+    <ul class="space-y-2 text-sm text-gray-600">
+        <li class="flex items-center">
+            <i class="fas fa-check-circle text-green-500 mr-2"></i>
+            Ít nhất 8 ký tự
+        </li>
+        <li class="flex items-center">
+            <i class="fas fa-check-circle text-green-500 mr-2"></i>
+            Chứa ít nhất 1 chữ hoa
+        </li>
+        <li class="flex items-center">
+            <i class="fas fa-check-circle text-green-500 mr-2"></i>
+            Chứa ít nhất 1 chữ thường
+        </li>
+        <li class="flex items-center">
+            <i class="fas fa-check-circle text-green-500 mr-2"></i>
+            Chứa ít nhất 1 số
+        </li>
+    </ul>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-generate username from full name
+    const fullNameInput = document.querySelector('input[name="full_name"]');
+    const usernameInput = document.querySelector('input[name="username"]');
+    
+    fullNameInput.addEventListener('input', function() {
+        if (!usernameInput.value) {
+            const fullName = this.value.toLowerCase();
+            const username = fullName
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '') // Remove accents
+                .replace(/[^a-z0-9\s]/g, '') // Remove special chars
+                .replace(/\s+/g, '') // Remove spaces
+                .substring(0, 20); // Limit length
+            usernameInput.value = username;
+        }
+    });
+    
+    // Password strength validation
+    const passwordInput = document.querySelector('input[name="password"]');
+    const confirmInput = document.querySelector('input[name="password_confirm"]');
+    
+    function validatePassword() {
+        const password = passwordInput.value;
+        const confirm = confirmInput.value;
+        
+        // Check password strength
+        const hasLength = password.length >= 8;
+        const hasUpper = /[A-Z]/.test(password);
+        const hasLower = /[a-z]/.test(password);
+        const hasNumber = /\d/.test(password);
+        
+        // Update UI indicators
+        const indicators = document.querySelectorAll('.fa-check-circle');
+        indicators[0].className = hasLength ? 'fas fa-check-circle text-green-500 mr-2' : 'fas fa-times-circle text-red-500 mr-2';
+        indicators[1].className = hasUpper ? 'fas fa-check-circle text-green-500 mr-2' : 'fas fa-times-circle text-red-500 mr-2';
+        indicators[2].className = hasLower ? 'fas fa-check-circle text-green-500 mr-2' : 'fas fa-times-circle text-red-500 mr-2';
+        indicators[3].className = hasNumber ? 'fas fa-check-circle text-green-500 mr-2' : 'fas fa-times-circle text-red-500 mr-2';
+        
+        // Check password match
+        if (confirm && password !== confirm) {
+            confirmInput.setCustomValidity('Mật khẩu không khớp');
+        } else {
+            confirmInput.setCustomValidity('');
+        }
+    }
+    
+    passwordInput.addEventListener('input', validatePassword);
+    confirmInput.addEventListener('input', validatePassword);
+});
+</script>
+{% endblock %}

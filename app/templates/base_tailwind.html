@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#f97316">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    {% if title %}
+    <title>{{ title }} - Quản lý lớp học</title>
+    {% else %}
+    <title>Quản lý lớp học</title>
+    {% endif %}
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Custom Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            200: '#fed7aa',
+                            300: '#fdba74',
+                            400: '#fb923c',
+                            500: '#f97316',
+                            600: '#ea580c',
+                            700: '#c2410c',
+                            800: '#9a3412',
+                            900: '#7c2d12',
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'bounce-in': 'bounceIn 0.6s ease-out',
+                        'slide-in-right': 'slideInRight 0.3s ease-out'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        bounceIn: {
+                            '0%': { transform: 'scale(0.3)', opacity: '0' },
+                            '50%': { transform: 'scale(1.05)' },
+                            '70%': { transform: 'scale(0.9)' },
+                            '100%': { transform: 'scale(1)', opacity: '1' }
+                        },
+                        slideInRight: {
+                            '0%': { transform: 'translateX(100%)', opacity: '0' },
+                            '100%': { transform: 'translateX(0)', opacity: '1' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-gradient-to-r from-orange-500 to-orange-600 shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <a href="{{ url_for('main.index') }}" class="flex items-center text-white font-bold text-xl hover:text-orange-100 transition-colors">
+                        <i class="fas fa-graduation-cap mr-2 text-2xl"></i>
+                        <span class="hidden sm:block">Quản lý lớp học</span>
+                    </a>
+                </div>
+                
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex items-center space-x-1">
+                    {% if current_user.is_authenticated %}
+                    <!-- Dashboard -->
+                    <a href="{{ url_for('main.dashboard') }}" class="text-white hover:bg-orange-600 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200">
+                        <i class="fas fa-tachometer-alt mr-1"></i> Dashboard
+                    </a>
+                    
+                    <!-- Calendar -->
+                    <a href="{{ url_for('calendar.calendar_view') }}" class="text-white hover:bg-orange-600 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200">
+                        <i class="fas fa-calendar mr-1"></i> Lịch dạy
+                    </a>
+                    
+                    <!-- Admin Menu -->
+                    {% if current_user.is_admin() %}
+                    <div class="relative group">
+                        <button class="text-white hover:bg-orange-600 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center">
+                            <i class="fas fa-users-cog mr-1"></i> Quản trị
+                            <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                        </button>
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                            <div class="py-1">
+                                <a href="{{ url_for('admin.users') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
+                                    <i class="fas fa-users mr-2"></i> Người dùng
+                                </a>
+                                <a href="{{ url_for('admin.classes') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
+                                    <i class="fas fa-chalkboard mr-2"></i> Lớp học
+                                </a>
+                                <a href="{{ url_for('financial.dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
+                                    <i class="fas fa-coins mr-2"></i> Quản lý tài chính
+                                </a>
+                                <a href="{{ url_for('expense.dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
+                                    <i class="fas fa-chart-line mr-2"></i> Chi tiêu cũ
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Manager Menu -->
+                    {% if current_user.is_manager() %}
+                    <div class="relative group">
+                        <button class="text-white hover:bg-orange-600 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center">
+                            <i class="fas fa-tasks mr-1"></i> Quản lý
+                            <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                        </button>
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                            <div class="py-1">
+                                <a href="{{ url_for('manager.classes') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
+                                    <i class="fas fa-chalkboard mr-2"></i> Lớp học
+                                </a>
+                                <a href="{{ url_for('manager.students') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
+                                    <i class="fas fa-user-graduate mr-2"></i> Học sinh
+                                </a>
+                                <a href="{{ url_for('manager.attendance') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
+                                    <i class="fas fa-chart-line mr-2"></i> Báo cáo điểm danh
+                                </a>
+                                <a href="{{ url_for('manager.schedule') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
+                                    <i class="fas fa-calendar-alt mr-2"></i> Lịch dạy
+                                </a>
+                                <a href="{{ url_for('manager.time_slots') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
+                                    <i class="fas fa-clock mr-2"></i> Khung giờ
+                                </a>
+                                <a href="{{ url_for('manager.schedule_assignments') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
+                                    <i class="fas fa-user-clock mr-2"></i> Phân công lịch dạy
+                                </a>
+                                <a href="{{ url_for('manager.copy_schedule') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
+                                    <i class="fas fa-copy mr-2"></i> Sao chép lịch dạy
+                                </a>
+                                <a href="{{ url_for('manager.notification_generator') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
+                                    <i class="fas fa-bell mr-2"></i> Tạo thông báo
+                                </a>
+                                <a href="{{ url_for('expense.dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
+                                    <i class="fas fa-chart-line mr-2"></i> Quản lý chi tiêu
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- User Role Menu -->
+                    {% if current_user.is_user() %}
+                    <div class="relative group">
+                        <button class="text-white hover:bg-orange-600 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center">
+                            <i class="fas fa-eye mr-1"></i> Xem
+                            <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                        </button>
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                            <div class="py-1">
+                                <a href="{{ url_for('user.weekly_schedule') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
+                                    <i class="fas fa-calendar-week mr-2"></i> Lịch tuần
+                                </a>
+                                <a href="{{ url_for('user.monthly_schedule') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
+                                    <i class="fas fa-calendar mr-2"></i> Lịch tháng
+                                </a>
+                                <a href="{{ url_for('user.view_finance') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
+                                    <i class="fas fa-chart-line mr-2"></i> Thu chi
+                                </a>
+                                <a href="{{ url_for('user.attendance_statistics') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
+                                    <i class="fas fa-chart-bar mr-2"></i> Thống kê điểm danh
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- User Profile Menu -->
+                    <div class="relative group">
+                        <button class="text-white hover:bg-orange-600 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center">
+                            <i class="fas fa-user mr-1"></i> {{ current_user.full_name }}
+                            <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                        </button>
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                            <div class="py-1">
+                                <a href="{{ url_for('auth.profile') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
+                                    <i class="fas fa-user-edit mr-2"></i> Hồ sơ
+                                </a>
+                                <div class="border-t border-gray-100"></div>
+                                <a href="{{ url_for('auth.logout') }}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                    <i class="fas fa-sign-out-alt mr-2"></i> Đăng xuất
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <!-- Login Button -->
+                    <a href="{{ url_for('auth.login') }}" class="bg-white text-orange-600 hover:bg-orange-50 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200">
+                        <i class="fas fa-sign-in-alt mr-1"></i> Đăng nhập
+                    </a>
+                    {% endif %}
+                </div>
+                
+                <!-- Mobile menu button -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-button" class="text-white hover:text-orange-200 focus:outline-none focus:text-orange-200">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Navigation -->
+        <div id="mobile-menu" class="md:hidden hidden bg-orange-600">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('main.dashboard') }}" class="text-white hover:bg-orange-700 block px-3 py-2 rounded-md text-base font-medium">
+                    <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
+                </a>
+                <a href="{{ url_for('calendar.calendar_view') }}" class="text-white hover:bg-orange-700 block px-3 py-2 rounded-md text-base font-medium">
+                    <i class="fas fa-calendar mr-2"></i> Lịch dạy
+                </a>
+
+                <!-- Admin Mobile Menu -->
+                {% if current_user.is_admin() %}
+                <div class="border-t border-orange-500 pt-2 mt-2">
+                    <div class="text-orange-200 px-3 py-1 text-sm font-medium">Quản trị</div>
+                    <a href="{{ url_for('admin.users') }}" class="text-white hover:bg-orange-700 block px-3 py-2 rounded-md text-base font-medium pl-6">
+                        <i class="fas fa-users mr-2"></i> Người dùng
+                    </a>
+                    <a href="{{ url_for('admin.classes') }}" class="text-white hover:bg-orange-700 block px-3 py-2 rounded-md text-base font-medium pl-6">
+                        <i class="fas fa-chalkboard mr-2"></i> Lớp học
+                    </a>
+                    <a href="{{ url_for('financial.dashboard') }}" class="text-white hover:bg-orange-700 block px-3 py-2 rounded-md text-base font-medium pl-6">
+                        <i class="fas fa-coins mr-2"></i> Quản lý tài chính
+                    </a>
+                    <a href="{{ url_for('expense.dashboard') }}" class="text-white hover:bg-orange-700 block px-3 py-2 rounded-md text-base font-medium pl-6">
+                        <i class="fas fa-chart-line mr-2"></i> Chi tiêu cũ
+                    </a>
+                </div>
+                {% endif %}
+
+                <!-- Manager Mobile Menu -->
+                {% if current_user.is_manager() %}
+                <div class="border-t border-orange-500 pt-2 mt-2">
+                    <div class="text-orange-200 px-3 py-1 text-sm font-medium">Quản lý</div>
+                    <a href="{{ url_for('manager.classes') }}" class="text-white hover:bg-orange-700 block px-3 py-2 rounded-md text-base font-medium pl-6">
+                        <i class="fas fa-chalkboard mr-2"></i> Lớp học
+                    </a>
+                    <a href="{{ url_for('manager.students') }}" class="text-white hover:bg-orange-700 block px-3 py-2 rounded-md text-base font-medium pl-6">
+                        <i class="fas fa-user-graduate mr-2"></i> Học sinh
+                    </a>
+                    <a href="{{ url_for('manager.attendance') }}" class="text-white hover:bg-orange-700 block px-3 py-2 rounded-md text-base font-medium pl-6">
+                        <i class="fas fa-chart-line mr-2"></i> Báo cáo điểm danh
+                    </a>
+                    <a href="{{ url_for('manager.schedule') }}" class="text-white hover:bg-orange-700 block px-3 py-2 rounded-md text-base font-medium pl-6">
+                        <i class="fas fa-calendar-alt mr-2"></i> Lịch dạy
+                    </a>
+                    <a href="{{ url_for('manager.time_slots') }}" class="text-white hover:bg-orange-700 block px-3 py-2 rounded-md text-base font-medium pl-6">
+                        <i class="fas fa-clock mr-2"></i> Khung giờ
+                    </a>
+                    <a href="{{ url_for('manager.schedule_assignments') }}" class="text-white hover:bg-orange-700 block px-3 py-2 rounded-md text-base font-medium pl-6">
+                        <i class="fas fa-user-clock mr-2"></i> Phân công lịch dạy
+                    </a>
+                    <a href="{{ url_for('manager.copy_schedule') }}" class="text-white hover:bg-orange-700 block px-3 py-2 rounded-md text-base font-medium pl-6">
+                        <i class="fas fa-copy mr-2"></i> Sao chép lịch dạy
+                    </a>
+                    <a href="{{ url_for('manager.notification_generator') }}" class="text-white hover:bg-orange-700 block px-3 py-2 rounded-md text-base font-medium pl-6">
+                        <i class="fas fa-bell mr-2"></i> Tạo thông báo
+                    </a>
+                    <a href="{{ url_for('expense.dashboard') }}" class="text-white hover:bg-orange-700 block px-3 py-2 rounded-md text-base font-medium pl-6">
+                        <i class="fas fa-chart-line mr-2"></i> Quản lý chi tiêu
+                    </a>
+                </div>
+                {% endif %}
+
+                <!-- User Role Mobile Menu -->
+                {% if current_user.is_user() %}
+                <div class="border-t border-orange-500 pt-2 mt-2">
+                    <div class="text-orange-200 px-3 py-1 text-sm font-medium">Xem thông tin</div>
+                    <a href="{{ url_for('user.weekly_schedule') }}" class="text-white hover:bg-orange-700 block px-3 py-2 rounded-md text-base font-medium pl-6">
+                        <i class="fas fa-calendar-week mr-2"></i> Lịch tuần
+                    </a>
+                    <a href="{{ url_for('user.monthly_schedule') }}" class="text-white hover:bg-orange-700 block px-3 py-2 rounded-md text-base font-medium pl-6">
+                        <i class="fas fa-calendar mr-2"></i> Lịch tháng
+                    </a>
+                    <a href="{{ url_for('user.view_finance') }}" class="text-white hover:bg-orange-700 block px-3 py-2 rounded-md text-base font-medium pl-6">
+                        <i class="fas fa-chart-line mr-2"></i> Thu chi
+                    </a>
+                    <a href="{{ url_for('user.attendance_statistics') }}" class="text-white hover:bg-orange-700 block px-3 py-2 rounded-md text-base font-medium pl-6">
+                        <i class="fas fa-chart-bar mr-2"></i> Thống kê điểm danh
+                    </a>
+                </div>
+                {% endif %}
+
+                <!-- User Profile Mobile Menu -->
+                <div class="border-t border-orange-500 pt-2 mt-2">
+                    <div class="text-orange-200 px-3 py-1 text-sm font-medium">{{ current_user.full_name }}</div>
+                    <a href="{{ url_for('auth.profile') }}" class="text-white hover:bg-orange-700 block px-3 py-2 rounded-md text-base font-medium pl-6">
+                        <i class="fas fa-user-edit mr-2"></i> Hồ sơ
+                    </a>
+                    <a href="{{ url_for('auth.logout') }}" class="text-red-200 hover:bg-red-600 block px-3 py-2 rounded-md text-base font-medium pl-6">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Đăng xuất
+                    </a>
+                </div>
+                {% else %}
+                <a href="{{ url_for('auth.login') }}" class="text-white hover:bg-orange-700 block px-3 py-2 rounded-md text-base font-medium">
+                    <i class="fas fa-sign-in-alt mr-2"></i> Đăng nhập
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div id="flash-messages" class="fixed top-20 right-4 z-50 space-y-2">
+            {% for category, message in messages %}
+            <div class="flash-message animate-slide-up bg-white border-l-4 {% if category == 'error' %}border-red-500{% elif category == 'success' %}border-green-500{% elif category == 'warning' %}border-yellow-500{% else %}border-blue-500{% endif %} p-4 rounded-r-lg shadow-lg max-w-sm">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        {% if category == 'error' %}
+                        <i class="fas fa-exclamation-circle text-red-500"></i>
+                        {% elif category == 'success' %}
+                        <i class="fas fa-check-circle text-green-500"></i>
+                        {% elif category == 'warning' %}
+                        <i class="fas fa-exclamation-triangle text-yellow-500"></i>
+                        {% else %}
+                        <i class="fas fa-info-circle text-blue-500"></i>
+                        {% endif %}
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-gray-700">{{ message }}</p>
+                    </div>
+                    <div class="ml-auto pl-3">
+                        <button onclick="this.parentElement.parentElement.parentElement.remove()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white mt-auto">
+        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <p class="text-sm text-gray-400">
+                    © 2024 Hệ thống quản lý lớp học. Phát triển bởi 
+                    <span class="text-orange-400 font-medium">Augment Agent</span>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            const icon = this.querySelector('i');
+
+            if (mobileMenu.classList.contains('hidden')) {
+                mobileMenu.classList.remove('hidden');
+                mobileMenu.style.animation = 'slideUp 0.3s ease-out';
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                mobileMenu.style.animation = 'fadeOut 0.3s ease-out';
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+                setTimeout(() => {
+                    mobileMenu.classList.add('hidden');
+                }, 300);
+            }
+        });
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const mobileMenu = document.getElementById('mobile-menu');
+            const mobileButton = document.getElementById('mobile-menu-button');
+
+            if (!mobileMenu.contains(event.target) && !mobileButton.contains(event.target)) {
+                if (!mobileMenu.classList.contains('hidden')) {
+                    mobileMenu.classList.add('hidden');
+                    mobileButton.querySelector('i').classList.remove('fa-times');
+                    mobileButton.querySelector('i').classList.add('fa-bars');
+                }
+            }
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 768) { // md breakpoint
+                const mobileMenu = document.getElementById('mobile-menu');
+                const icon = document.getElementById('mobile-menu-button').querySelector('i');
+                mobileMenu.classList.add('hidden');
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        });
+
+        // Auto-hide flash messages
+        setTimeout(function() {
+            const flashMessages = document.querySelectorAll('.flash-message');
+            flashMessages.forEach(function(message) {
+                message.style.opacity = '0';
+                message.style.transform = 'translateX(100%)';
+                setTimeout(function() {
+                    message.remove();
+                }, 300);
+            });
+        }, 5000);
+
+        // Notification system
+        window.notify = {
+            show: function(message, type = 'info', duration = 5000) {
+                const colors = {
+                    'success': 'border-green-500',
+                    'error': 'border-red-500', 
+                    'warning': 'border-yellow-500',
+                    'info': 'border-blue-500'
+                };
+                
+                const icons = {
+                    'success': 'fas fa-check-circle text-green-500',
+                    'error': 'fas fa-exclamation-circle text-red-500',
+                    'warning': 'fas fa-exclamation-triangle text-yellow-500', 
+                    'info': 'fas fa-info-circle text-blue-500'
+                };
+
+                const notification = document.createElement('div');
+                notification.className = `flash-message animate-slide-up bg-white border-l-4 ${colors[type]} p-4 rounded-r-lg shadow-lg max-w-sm mb-2`;
+                notification.innerHTML = `
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="${icons[type]}"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-gray-700">${message}</p>
+                        </div>
+                        <div class="ml-auto pl-3">
+                            <button onclick="this.parentElement.parentElement.parentElement.remove()" class="text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                let container = document.getElementById('flash-messages');
+                if (!container) {
+                    container = document.createElement('div');
+                    container.id = 'flash-messages';
+                    container.className = 'fixed top-20 right-4 z-50 space-y-2';
+                    document.body.appendChild(container);
+                }
+
+                container.appendChild(notification);
+
+                if (duration > 0) {
+                    setTimeout(function() {
+                        notification.style.opacity = '0';
+                        notification.style.transform = 'translateX(100%)';
+                        setTimeout(function() {
+                            notification.remove();
+                        }, 300);
+                    }, duration);
+                }
+            },
+            success: function(message, duration = 5000) {
+                this.show(message, 'success', duration);
+            },
+            error: function(message, duration = 7000) {
+                this.show(message, 'error', duration);
+            },
+            warning: function(message, duration = 6000) {
+                this.show(message, 'warning', duration);
+            },
+            info: function(message, duration = 5000) {
+                this.show(message, 'info', duration);
+            }
+        };
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

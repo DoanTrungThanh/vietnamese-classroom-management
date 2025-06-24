@@ -1,0 +1,240 @@
+{% extends "base_tailwind.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">
+            <i class="fas fa-gift text-green-500 mr-2"></i>
+            Nhận tài sản quyên góp
+        </h1>
+        <a href="{{ url_for('financial.donations') }}" 
+           class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition duration-200">
+            <i class="fas fa-arrow-left mr-2"></i>Quay lại
+        </a>
+    </div>
+
+    <!-- Form -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <form method="POST" class="space-y-6">
+            {{ form.hidden_tag() }}
+            
+            <!-- Asset Information -->
+            <div class="border-b border-gray-200 pb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                    <i class="fas fa-box text-blue-500 mr-2"></i>
+                    Thông tin tài sản
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-tag text-purple-500 mr-1"></i>
+                            {{ form.asset_name.label.text }} *
+                        </label>
+                        {{ form.asset_name(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500", placeholder="Tên tài sản quyên góp") }}
+                        {% if form.asset_name.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.asset_name.errors[0] }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-folder text-orange-500 mr-1"></i>
+                            {{ form.category.label.text }} *
+                        </label>
+                        {{ form.category(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500") }}
+                        {% if form.category.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.category.errors[0] }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-sort-numeric-up text-blue-500 mr-1"></i>
+                            {{ form.quantity.label.text }} *
+                        </label>
+                        {{ form.quantity(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500", min="1") }}
+                        {% if form.quantity.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.quantity.errors[0] }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-money-bill text-green-500 mr-1"></i>
+                            {{ form.estimated_value.label.text }}
+                        </label>
+                        <div class="relative">
+                            {{ form.estimated_value(class="w-full px-3 py-2 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500", placeholder="0") }}
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500 sm:text-sm">VNĐ</span>
+                            </div>
+                        </div>
+                        {% if form.estimated_value.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.estimated_value.errors[0] }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-star text-yellow-500 mr-1"></i>
+                            {{ form.condition.label.text }} *
+                        </label>
+                        {{ form.condition(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500") }}
+                        {% if form.condition.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.condition.errors[0] }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-calendar text-green-500 mr-1"></i>
+                            {{ form.donation_date.label.text }} *
+                        </label>
+                        {{ form.donation_date(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500") }}
+                        {% if form.donation_date.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.donation_date.errors[0] }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="mt-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-align-left text-gray-500 mr-1"></i>
+                        {{ form.description.label.text }}
+                    </label>
+                    {{ form.description(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500", rows="3", placeholder="Mô tả chi tiết về tài sản") }}
+                    {% if form.description.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.description.errors[0] }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Donor Information -->
+            <div class="border-b border-gray-200 pb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                    <i class="fas fa-user-heart text-red-500 mr-2"></i>
+                    Thông tin người quyên góp
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-user text-blue-500 mr-1"></i>
+                            {{ form.donor_name.label.text }}
+                        </label>
+                        {{ form.donor_name(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500", placeholder="Tên người/tổ chức quyên góp") }}
+                        {% if form.donor_name.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.donor_name.errors[0] }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-phone text-green-500 mr-1"></i>
+                            {{ form.donor_phone.label.text }}
+                        </label>
+                        {{ form.donor_phone(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500", placeholder="Số điện thoại liên hệ") }}
+                        {% if form.donor_phone.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.donor_phone.errors[0] }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Donor Address -->
+                <div class="mt-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-map-marker-alt text-red-500 mr-1"></i>
+                        {{ form.donor_address.label.text }}
+                    </label>
+                    {{ form.donor_address(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500", rows="2", placeholder="Địa chỉ người quyên góp") }}
+                    {% if form.donor_address.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.donor_address.errors[0] }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Storage Information -->
+            <div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                    <i class="fas fa-warehouse text-purple-500 mr-2"></i>
+                    Thông tin lưu trữ
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-map-pin text-purple-500 mr-1"></i>
+                            {{ form.location.label.text }}
+                        </label>
+                        {{ form.location(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500", placeholder="Vị trí lưu trữ tài sản") }}
+                        {% if form.location.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.location.errors[0] }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="mt-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-sticky-note text-yellow-500 mr-1"></i>
+                        {{ form.notes.label.text }}
+                    </label>
+                    {{ form.notes(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500", rows="3", placeholder="Ghi chú thêm về tài sản") }}
+                    {% if form.notes.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.notes.errors[0] }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                <a href="{{ url_for('financial.donations') }}" 
+                   class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition duration-200">
+                    Hủy
+                </a>
+                {{ form.submit(class="px-6 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition duration-200") }}
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Format estimated value input
+    const valueInput = document.querySelector('input[name="estimated_value"]');
+    if (valueInput) {
+        valueInput.addEventListener('input', function(e) {
+            // Remove non-numeric characters except decimal point
+            let value = e.target.value.replace(/[^0-9.]/g, '');
+            
+            // Ensure only one decimal point
+            const parts = value.split('.');
+            if (parts.length > 2) {
+                value = parts[0] + '.' + parts.slice(1).join('');
+            }
+            
+            e.target.value = value;
+        });
+    }
+    
+    // Auto-format phone number
+    const phoneInput = document.querySelector('input[name="donor_phone"]');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function(e) {
+            // Remove non-numeric characters
+            let value = e.target.value.replace(/[^0-9]/g, '');
+            
+            // Limit to 11 digits (Vietnamese phone numbers)
+            if (value.length > 11) {
+                value = value.substring(0, 11);
+            }
+            
+            e.target.value = value;
+        });
+    }
+});
+</script>
+{% endblock %}

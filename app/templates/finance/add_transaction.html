@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-plus-circle"></i> Thêm giao dịch</h2>
+            <a href="{{ url_for('finance.finance_dashboard') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </a>
+        </div>
+        <hr>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-money-bill-wave"></i> Thông tin giao dịch</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" class="needs-validation" novalidate>
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.type.label(class="form-label") }}
+                            {{ form.type(class="form-select", onchange="updateTypeStyle()") }}
+                            {% for error in form.type.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.transaction_date.label(class="form-label") }}
+                            {{ form.transaction_date(class="form-control") }}
+                            {% for error in form.transaction_date.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.amount.label(class="form-label") }}
+                            <div class="input-group">
+                                {{ form.amount(class="form-control", placeholder="0") }}
+                                <span class="input-group-text">VNĐ</span>
+                            </div>
+                            {% for error in form.amount.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.category.label(class="form-label") }}
+                            {{ form.category(class="form-control", list="categoryList", placeholder="Nhập hoặc chọn danh mục") }}
+                            <datalist id="categoryList">
+                                <option value="Học phí">
+                                <option value="Văn phòng phẩm">
+                                <option value="Thiết bị dạy học">
+                                <option value="Sự kiện">
+                                <option value="Bảo trì">
+                                <option value="Điện nước">
+                                <option value="Lương thưởng">
+                                <option value="Khác">
+                            </datalist>
+                            {% for error in form.category.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control", rows="3", placeholder="Mô tả chi tiết về giao dịch...") }}
+                        {% for error in form.description.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.class_id.label(class="form-label") }}
+                            {{ form.class_id(class="form-select") }}
+                            {% for error in form.class_id.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                            <div class="form-text">Chọn lớp nếu giao dịch liên quan đến lớp cụ thể</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.event_id.label(class="form-label") }}
+                            {{ form.event_id(class="form-select") }}
+                            {% for error in form.event_id.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                            <div class="form-text">Chọn sự kiện nếu giao dịch liên quan đến sự kiện</div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        {{ form.submit(class="btn btn-primary btn-lg", id="submitBtn") }}
+                        <a href="{{ url_for('finance.finance_dashboard') }}" class="btn btn-secondary btn-lg">Hủy</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Templates -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6><i class="fas fa-templates"></i> Mẫu giao dịch nhanh</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <button class="btn btn-outline-success btn-sm w-100" onclick="fillTemplate('income', 'Học phí', 'Thu học phí tháng')">
+                            <i class="fas fa-graduation-cap"></i> Thu học phí
+                        </button>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <button class="btn btn-outline-danger btn-sm w-100" onclick="fillTemplate('expense', 'Văn phòng phẩm', 'Mua văn phòng phẩm')">
+                            <i class="fas fa-pen"></i> Văn phòng phẩm
+                        </button>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <button class="btn btn-outline-danger btn-sm w-100" onclick="fillTemplate('expense', 'Thiết bị dạy học', 'Mua thiết bị dạy học')">
+                            <i class="fas fa-chalkboard"></i> Thiết bị
+                        </button>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <button class="btn btn-outline-danger btn-sm w-100" onclick="fillTemplate('expense', 'Điện nước', 'Tiền điện nước tháng')">
+                            <i class="fas fa-bolt"></i> Điện nước
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function updateTypeStyle() {
+    const typeSelect = document.querySelector('select[name="type"]');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    if (typeSelect.value === 'income') {
+        submitBtn.className = 'btn btn-success btn-lg';
+        submitBtn.innerHTML = '<i class="fas fa-plus-circle"></i> Thêm phiếu thu';
+    } else if (typeSelect.value === 'expense') {
+        submitBtn.className = 'btn btn-danger btn-lg';
+        submitBtn.innerHTML = '<i class="fas fa-minus-circle"></i> Thêm phiếu chi';
+    } else {
+        submitBtn.className = 'btn btn-primary btn-lg';
+        submitBtn.innerHTML = '<i class="fas fa-save"></i> Lưu';
+    }
+}
+
+function fillTemplate(type, category, description) {
+    document.querySelector('select[name="type"]').value = type;
+    document.querySelector('input[name="category"]').value = category;
+    document.querySelector('textarea[name="description"]').value = description;
+    
+    // Set today's date
+    const today = new Date().toISOString().split('T')[0];
+    document.querySelector('input[name="transaction_date"]').value = today;
+    
+    updateTypeStyle();
+    
+    // Focus on amount field
+    document.querySelector('input[name="amount"]').focus();
+}
+
+// Format amount input
+document.querySelector('input[name="amount"]').addEventListener('input', function() {
+    let value = this.value.replace(/[^\d]/g, '');
+    if (value) {
+        this.value = parseInt(value).toLocaleString('vi-VN');
+    }
+});
+
+// Remove formatting before submit
+document.querySelector('form').addEventListener('submit', function() {
+    const amountInput = document.querySelector('input[name="amount"]');
+    amountInput.value = amountInput.value.replace(/[^\d]/g, '');
+});
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    // Set today's date as default
+    const today = new Date().toISOString().split('T')[0];
+    document.querySelector('input[name="transaction_date"]').value = today;
+    
+    updateTypeStyle();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2><i class="fas fa-chalkboard"></i> Quản lý lớp học</h2>
+        <hr>
+    </div>
+</div>
+
+<div class="row">
+    {% for class in classes %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-chalkboard"></i> {{ class.name }}
+                </h5>
+                <small>{{ class.block_name }}</small>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    {% if class.description %}
+                        {{ class.description[:100] }}{% if class.description|length > 100 %}...{% endif %}
+                    {% else %}
+                        <em class="text-muted">Chưa có mô tả</em>
+                    {% endif %}
+                </p>
+                
+                <div class="mb-3">
+                    <h6><i class="fas fa-users"></i> Thông tin lớp:</h6>
+                    <ul class="list-unstyled">
+                        <li><strong>Sĩ số:</strong> {{ class.student_count }} học sinh</li>
+                        <li><strong>Giáo viên:</strong> 
+                            {% if class.teachers %}
+                                {{ class.teachers|length }} người
+                            {% else %}
+                                Chưa có
+                            {% endif %}
+                        </li>
+                        <li><strong>Quản sinh:</strong> 
+                            {% if class.manager %}
+                                {{ class.manager.full_name }}
+                            {% else %}
+                                Chưa phân công
+                            {% endif %}
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="mb-3">
+                    <h6><i class="fas fa-chalkboard-teacher"></i> Giáo viên:</h6>
+                    {% if class.teachers %}
+                        {% for teacher in class.teachers %}
+                        <span class="badge bg-info me-1 mb-1">{{ teacher.full_name }}</span>
+                        {% endfor %}
+                    {% else %}
+                        <span class="text-muted">Chưa có giáo viên</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="btn-group w-100">
+                    <a href="{{ url_for('manager.students') }}?class={{ class.id }}" 
+                       class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-user-graduate"></i> Học sinh
+                    </a>
+                    <button class="btn btn-outline-info btn-sm" onclick="viewClassSchedule({{ class.id }})">
+                        <i class="fas fa-calendar-alt"></i> Lịch dạy
+                    </button>
+                    <button class="btn btn-outline-success btn-sm" onclick="manageTeachers({{ class.id }})">
+                        <i class="fas fa-users-cog"></i> Giáo viên
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if not classes %}
+<div class="row">
+    <div class="col-12">
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle fa-2x mb-3"></i>
+            <h5>Chưa có lớp học nào</h5>
+            <p>
+                {% if current_user.is_admin() %}
+                    Bạn có thể tạo lớp học mới từ menu Admin.
+                {% else %}
+                    Liên hệ Admin để được phân công quản lý lớp học.
+                {% endif %}
+            </p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Class Schedule Modal -->
+<div class="modal fade" id="classScheduleModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Lịch dạy lớp</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="classScheduleContent">
+                <!-- Content will be loaded via AJAX -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Manage Teachers Modal -->
+<div class="modal fade" id="manageTeachersModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Quản lý giáo viên</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="manageTeachersContent">
+                <!-- Content will be loaded via AJAX -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" onclick="saveTeachers()">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function viewClassSchedule(classId) {
+    fetch(`/manager/class/${classId}/schedule`)
+        .then(response => response.json())
+        .then(data => {
+            let content = '<div class="table-responsive"><table class="table table-sm">';
+            content += '<thead><tr><th>Thứ</th><th>Tiết</th><th>Giáo viên</th><th>Môn học</th><th>Phòng</th><th>Thời gian</th></tr></thead><tbody>';
+            
+            if (data.schedules.length > 0) {
+                data.schedules.forEach(schedule => {
+                    content += `<tr>
+                        <td>${schedule.day_name}</td>
+                        <td>Tiết ${schedule.period}</td>
+                        <td>${schedule.teacher_name}</td>
+                        <td>${schedule.subject || 'N/A'}</td>
+                        <td>${schedule.room || 'N/A'}</td>
+                        <td>${schedule.time_range}</td>
+                    </tr>`;
+                });
+            } else {
+                content += '<tr><td colspan="6" class="text-center text-muted">Chưa có lịch dạy</td></tr>';
+            }
+            
+            content += '</tbody></table></div>';
+            document.getElementById('classScheduleContent').innerHTML = content;
+            
+            var modal = new bootstrap.Modal(document.getElementById('classScheduleModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('danger', 'Không thể tải lịch dạy');
+        });
+}
+
+function manageTeachers(classId) {
+    fetch(`/manager/class/${classId}/teachers`)
+        .then(response => response.json())
+        .then(data => {
+            let content = '<div class="mb-3"><label class="form-label">Chọn giáo viên cho lớp:</label>';
+            content += '<div class="form-check-list">';
+            
+            data.all_teachers.forEach(teacher => {
+                const isAssigned = data.assigned_teachers.some(t => t.id === teacher.id);
+                content += `
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="${teacher.id}" 
+                               id="teacher_${teacher.id}" ${isAssigned ? 'checked' : ''}>
+                        <label class="form-check-label" for="teacher_${teacher.id}">
+                            ${teacher.full_name} (${teacher.phone || 'N/A'})
+                        </label>
+                    </div>
+                `;
+            });
+            
+            content += '</div></div>';
+            document.getElementById('manageTeachersContent').innerHTML = content;
+            document.getElementById('manageTeachersContent').dataset.classId = classId;
+            
+            var modal = new bootstrap.Modal(document.getElementById('manageTeachersModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('danger', 'Không thể tải danh sách giáo viên');
+        });
+}
+
+function saveTeachers() {
+    const classId = document.getElementById('manageTeachersContent').dataset.classId;
+    const checkboxes = document.querySelectorAll('#manageTeachersContent input[type="checkbox"]:checked');
+    const teacherIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+    
+    fetch(`/manager/class/${classId}/teachers`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({teacher_ids: teacherIds})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('success', 'Cập nhật giáo viên thành công');
+            bootstrap.Modal.getInstance(document.getElementById('manageTeachersModal')).hide();
+            location.reload(); // Reload to update the display
+        } else {
+            showAlert('danger', data.message || 'Có lỗi xảy ra');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('danger', 'Không thể lưu thay đổi');
+    });
+}
+</script>
+{% endblock %}

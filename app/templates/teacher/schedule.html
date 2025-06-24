@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2><i class="fas fa-calendar-alt"></i> Lịch dạy của tôi</h2>
+        <hr>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered schedule-table">
+                        <thead>
+                            <tr>
+                                <th width="12%">Tiết</th>
+                                <th width="12.5%">Thứ 2</th>
+                                <th width="12.5%">Thứ 3</th>
+                                <th width="12.5%">Thứ 4</th>
+                                <th width="12.5%">Thứ 5</th>
+                                <th width="12.5%">Thứ 6</th>
+                                <th width="12.5%">Thứ 7</th>
+                                <th width="12.5%">Chủ nhật</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Buổi sáng -->
+                            <tr style="height: 120px;">
+                                <td class="text-center font-weight-bold bg-light">
+                                    <div class="fw-bold text-primary">Buổi sáng</div>
+                                    <small class="text-muted">07:30 - 11:30</small>
+                                </td>
+                                {% for day in range(1, 8) %}
+                                <td class="schedule-cell" data-day="{{ day }}" data-session="morning">
+                                    {% if day in schedule_table and 'morning' in schedule_table[day] %}
+                                        {% for schedule in schedule_table[day]['morning'] %}
+                                        <div class="schedule-item morning-session mb-1" data-schedule-id="{{ schedule.id }}"
+                                             onclick="window.location.href='{{ url_for('teacher.attendance', schedule_id=schedule.id) }}'">
+                                            <div class="class-name fw-bold">{{ schedule.class_obj.name }}</div>
+                                            <div class="time-range small">{{ schedule.time_range }}</div>
+                                            {% if schedule.subject %}
+                                            <div class="subject small">{{ schedule.subject }}</div>
+                                            {% endif %}
+                                            {% if schedule.room %}
+                                            <div class="room small">Phòng: {{ schedule.room }}</div>
+                                            {% endif %}
+                                            <div class="student-count small">
+                                                <i class="fas fa-users"></i> {{ schedule.class_obj.student_count }}
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </td>
+                                {% endfor %}
+                            </tr>
+
+                            <!-- Buổi chiều -->
+                            <tr style="height: 120px;">
+                                <td class="text-center font-weight-bold bg-light">
+                                    <div class="fw-bold text-success">Buổi chiều</div>
+                                    <small class="text-muted">13:30 - 17:30</small>
+                                </td>
+                                {% for day in range(1, 8) %}
+                                <td class="schedule-cell" data-day="{{ day }}" data-session="afternoon">
+                                    {% if day in schedule_table and 'afternoon' in schedule_table[day] %}
+                                        {% for schedule in schedule_table[day]['afternoon'] %}
+                                        <div class="schedule-item afternoon-session mb-1" data-schedule-id="{{ schedule.id }}"
+                                             onclick="window.location.href='{{ url_for('teacher.attendance', schedule_id=schedule.id) }}'">
+                                            <div class="class-name fw-bold">{{ schedule.class_obj.name }}</div>
+                                            <div class="time-range small">{{ schedule.time_range }}</div>
+                                            {% if schedule.subject %}
+                                            <div class="subject small">{{ schedule.subject }}</div>
+                                            {% endif %}
+                                            {% if schedule.room %}
+                                            <div class="room small">Phòng: {{ schedule.room }}</div>
+                                            {% endif %}
+                                            <div class="student-count small">
+                                                <i class="fas fa-users"></i> {{ schedule.class_obj.student_count }}
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </td>
+                                {% endfor %}
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            <strong>Hướng dẫn:</strong> Nhấp vào tiết học để thực hiện điểm danh và ghi nội dung bài giảng.
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add hover effect to schedule items
+    var scheduleItems = document.querySelectorAll('.schedule-item');
+    scheduleItems.forEach(function(item) {
+        item.addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.02)';
+            this.style.zIndex = '10';
+        });
+        
+        item.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+            this.style.zIndex = '1';
+        });
+    });
+});
+</script>
+{% endblock %}

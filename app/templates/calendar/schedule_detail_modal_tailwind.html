@@ -1,0 +1,197 @@
+<!-- Schedule Details -->
+<div class="space-y-6">
+    <!-- Basic Information -->
+    <div class="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-6 text-white">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-xl font-bold mb-2">{{ schedule.class_obj.name }}</h3>
+                <p class="text-orange-100">{{ schedule.session_name }}: {{ schedule.time_range }}</p>
+            </div>
+            <div class="text-right">
+                <div class="text-2xl font-bold">{{ schedule.class_obj.student_count }}</div>
+                <div class="text-orange-200 text-sm">Học sinh</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Information -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-gray-50 rounded-lg p-4">
+            <h4 class="font-semibold text-gray-900 mb-3 flex items-center">
+                <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                Thông tin lịch học
+            </h4>
+            <div class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Thời gian:</span>
+                    <span class="font-medium">{{ schedule.time_range }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Buổi:</span>
+                    <span class="font-medium">{{ schedule.session_name }}</span>
+                </div>
+                {% if schedule.subject %}
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Môn học:</span>
+                    <span class="font-medium">{{ schedule.subject }}</span>
+                </div>
+                {% endif %}
+                {% if schedule.room %}
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Phòng học:</span>
+                    <span class="font-medium">{{ schedule.room }}</span>
+                </div>
+                {% endif %}
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Thứ:</span>
+                    <span class="font-medium">
+                        {% set days = ['', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'] %}
+                        {{ days[schedule.day_of_week] }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gray-50 rounded-lg p-4">
+            <h4 class="font-semibold text-gray-900 mb-3 flex items-center">
+                <i class="fas fa-user-tie text-green-500 mr-2"></i>
+                Thông tin giáo viên
+            </h4>
+            <div class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Họ tên:</span>
+                    <span class="font-medium">{{ schedule.teacher.full_name }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Email:</span>
+                    <span class="font-medium">{{ schedule.teacher.email }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Điện thoại:</span>
+                    <span class="font-medium">{{ schedule.teacher.phone or 'Chưa cập nhật' }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Information -->
+    {% if date %}
+    <div class="bg-white border border-gray-200 rounded-lg">
+        <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+            <h4 class="font-semibold text-gray-900 flex items-center">
+                <i class="fas fa-user-check text-purple-500 mr-2"></i>
+                Điểm danh ngày {{ date }}
+            </h4>
+        </div>
+        <div class="p-4">
+            {% if attendance_records %}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                {% set present_count = attendance_records|selectattr('status', 'equalto', 'present')|list|length %}
+                {% set absent_count = attendance_records|selectattr('status', 'equalto', 'absent')|list|length %}
+                {% set late_count = attendance_records|selectattr('status', 'equalto', 'late')|list|length %}
+                
+                <div class="text-center p-3 bg-green-50 rounded-lg">
+                    <div class="text-2xl font-bold text-green-600">{{ present_count }}</div>
+                    <div class="text-sm text-green-700">Có mặt</div>
+                </div>
+                <div class="text-center p-3 bg-red-50 rounded-lg">
+                    <div class="text-2xl font-bold text-red-600">{{ absent_count }}</div>
+                    <div class="text-sm text-red-700">Vắng mặt</div>
+                </div>
+                <div class="text-center p-3 bg-yellow-50 rounded-lg">
+                    <div class="text-2xl font-bold text-yellow-600">{{ late_count }}</div>
+                    <div class="text-sm text-yellow-700">Đi muộn</div>
+                </div>
+            </div>
+            
+            <div class="text-sm text-gray-600 mb-3">
+                Tỷ lệ có mặt: {{ "%.1f"|format((present_count / attendance_records|length * 100) if attendance_records|length > 0 else 0) }}%
+            </div>
+            
+            <!-- Attendance List -->
+            <div class="max-h-40 overflow-y-auto">
+                <div class="space-y-1">
+                    {% for record in attendance_records %}
+                    <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
+                        <span class="text-sm font-medium">{{ record.student.full_name }}</span>
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                            {% if record.status == 'present' %}bg-green-100 text-green-800
+                            {% elif record.status == 'absent' %}bg-red-100 text-red-800
+                            {% elif record.status == 'late' %}bg-yellow-100 text-yellow-800
+                            {% endif %}">
+                            {% if record.status == 'present' %}
+                                <i class="fas fa-check mr-1"></i> Có mặt
+                            {% elif record.status == 'absent' %}
+                                <i class="fas fa-times mr-1"></i> Vắng
+                            {% elif record.status == 'late' %}
+                                <i class="fas fa-clock mr-1"></i> Muộn
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-8">
+                <i class="fas fa-user-clock text-gray-400 text-3xl mb-3"></i>
+                <p class="text-gray-500">Chưa có dữ liệu điểm danh cho ngày này</p>
+                {% if current_user.is_teacher() and schedule.teacher_id == current_user.id %}
+                <a href="{{ url_for('teacher.attendance', schedule_id=schedule.id, date=date) }}" 
+                   class="inline-flex items-center mt-3 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors duration-200">
+                    <i class="fas fa-user-check mr-2"></i>
+                    Điểm danh ngay
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Action Buttons -->
+    <div class="flex flex-wrap gap-3 pt-4 border-t border-gray-200">
+        {% if current_user.is_teacher() and schedule.teacher_id == current_user.id %}
+        <a href="{{ url_for('teacher.attendance', schedule_id=schedule.id) }}" 
+           class="flex-1 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-center">
+            <i class="fas fa-user-check mr-2"></i>
+            Điểm danh
+        </a>
+        {% endif %}
+        
+        {% if current_user.is_admin() or current_user.is_manager() %}
+        <a href="{{ url_for('manager.schedule') }}"
+           class="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-center">
+            <i class="fas fa-edit mr-2"></i>
+            Quản lý lịch
+        </a>
+
+        <!-- Delete Schedule Button -->
+        {% if current_user.is_admin() or (current_user.is_manager() and schedule.class_obj.manager_id == current_user.id) %}
+        <button onclick="deleteScheduleFromCalendar({{ schedule.id }})"
+                class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors duration-200">
+            <i class="fas fa-trash mr-2"></i>
+            Xóa lịch
+        </button>
+        {% endif %}
+        {% endif %}
+        
+        {% if date %}
+        <a href="{{ url_for('calendar.day_view', date_str=date) }}"
+           class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-center">
+            <i class="fas fa-calendar-day mr-2"></i>
+            Xem lịch ngày
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Notes Section -->
+    {% if schedule.notes %}
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <h4 class="font-semibold text-yellow-800 mb-2 flex items-center">
+            <i class="fas fa-sticky-note mr-2"></i>
+            Ghi chú
+        </h4>
+        <p class="text-yellow-700 text-sm">{{ schedule.notes }}</p>
+    </div>
+    {% endif %}
+</div>

@@ -1,0 +1,150 @@
+<div class="row">
+    <div class="col-md-6">
+        <h6><i class="fas fa-info-circle"></i> Thông tin lịch học</h6>
+        <table class="table table-borderless">
+            <tr>
+                <td><strong>Lớp học:</strong></td>
+                <td>{{ schedule.class_obj.name }}</td>
+            </tr>
+            <tr>
+                <td><strong>Giáo viên:</strong></td>
+                <td>{{ schedule.teacher.full_name }}</td>
+            </tr>
+            <tr>
+                <td><strong>Thời gian:</strong></td>
+                <td>{{ schedule.session_name }} ({{ schedule.time_range }})</td>
+            </tr>
+            {% if schedule.subject %}
+            <tr>
+                <td><strong>Môn học:</strong></td>
+                <td>{{ schedule.subject }}</td>
+            </tr>
+            {% endif %}
+            {% if schedule.room %}
+            <tr>
+                <td><strong>Phòng học:</strong></td>
+                <td>{{ schedule.room }}</td>
+            </tr>
+            {% endif %}
+            <tr>
+                <td><strong>Sĩ số:</strong></td>
+                <td>{{ schedule.class_obj.student_count }} học sinh</td>
+            </tr>
+            <tr>
+                <td><strong>Ngày trong tuần:</strong></td>
+                <td>
+                    {% set day_names = ['', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'] %}
+                    {{ day_names[schedule.day_of_week] }}
+                </td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="col-md-6">
+        <h6><i class="fas fa-users"></i> Danh sách học sinh</h6>
+        <div class="student-list" style="max-height: 300px; overflow-y: auto;">
+            {% if schedule.class_obj.students %}
+            <div class="list-group">
+                {% for student in schedule.class_obj.students %}
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ student.full_name }}</strong>
+                        <br><small class="text-muted">{{ student.student_code }}</small>
+                    </div>
+                    {% if attendance_records %}
+                        {% set student_attendance = attendance_records|selectattr('student_id', 'equalto', student.id)|first %}
+                        {% if student_attendance %}
+                            {% if student_attendance.status == 'present' %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check"></i> Có mặt
+                            </span>
+                            {% elif student_attendance.status == 'absent' %}
+                            <span class="badge bg-danger">
+                                <i class="fas fa-times"></i> Vắng
+                            </span>
+                            {% elif student_attendance.status == 'late' %}
+                            <span class="badge bg-warning">
+                                <i class="fas fa-clock"></i> Muộn
+                            </span>
+                            {% endif %}
+                        {% else %}
+                        <span class="badge bg-secondary">
+                            <i class="fas fa-question"></i> Chưa điểm danh
+                        </span>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center text-muted py-3">
+                <i class="fas fa-user-slash fa-2x mb-2"></i>
+                <p>Chưa có học sinh nào trong lớp</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if view_date and attendance_records %}
+<hr>
+<div class="row">
+    <div class="col-12">
+        <h6><i class="fas fa-chart-bar"></i> Thống kê điểm danh ngày {{ view_date.strftime('%d/%m/%Y') }}</h6>
+        {% set present_count = attendance_records|selectattr('status', 'equalto', 'present')|list|length %}
+        {% set absent_count = attendance_records|selectattr('status', 'equalto', 'absent')|list|length %}
+        {% set late_count = attendance_records|selectattr('status', 'equalto', 'late')|list|length %}
+        {% set total_students = schedule.class_obj.student_count %}
+        
+        <div class="row">
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="h4 text-success">{{ present_count }}</div>
+                    <small>Có mặt</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="h4 text-danger">{{ absent_count }}</div>
+                    <small>Vắng mặt</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="h4 text-warning">{{ late_count }}</div>
+                    <small>Đi muộn</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="h4 text-primary">{{ "%.1f"|format((present_count / total_students * 100) if total_students > 0 else 0) }}%</div>
+                    <small>Tỷ lệ có mặt</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<hr>
+<div class="row">
+    <div class="col-12 text-end">
+        {% if current_user.is_teacher() and schedule.teacher_id == current_user.id %}
+        <a href="{{ url_for('teacher.attendance', schedule_id=schedule.id) }}" 
+           class="btn btn-primary">
+            <i class="fas fa-user-check"></i> Điểm danh
+        </a>
+        {% endif %}
+        
+        {% if current_user.is_admin() or current_user.is_manager() %}
+        <a href="{{ url_for('manager.schedule') }}" 
+           class="btn btn-outline-primary">
+            <i class="fas fa-calendar-alt"></i> Quản lý lịch
+        </a>
+        {% endif %}
+        
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times"></i> Đóng
+        </button>
+    </div>
+</div>

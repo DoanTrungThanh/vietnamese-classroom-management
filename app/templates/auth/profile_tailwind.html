@@ -1,0 +1,250 @@
+{% extends "base_tailwind.html" %}
+
+{% block content %}
+<!-- Profile Header -->
+<div class="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg shadow-lg p-8 mb-8 text-white">
+    <div class="flex items-center space-x-6">
+        <div class="w-24 h-24 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+            <i class="fas fa-user text-4xl text-white"></i>
+        </div>
+        <div>
+            <h1 class="text-3xl font-bold mb-2">{{ current_user.full_name }}</h1>
+            <p class="text-orange-100 text-lg">
+                {% if current_user.is_admin() %}
+                <i class="fas fa-crown mr-2"></i>Quản trị viên hệ thống
+                {% elif current_user.is_manager() %}
+                <i class="fas fa-user-tie mr-2"></i>Quản sinh - Quản lý lớp học
+                {% else %}
+                <i class="fas fa-chalkboard-teacher mr-2"></i>Giáo viên
+                {% endif %}
+            </p>
+            <p class="text-orange-200 text-sm">
+                <i class="fas fa-envelope mr-2"></i>{{ current_user.email }}
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Profile Information -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Personal Information -->
+    <div class="lg:col-span-2">
+        <div class="bg-white rounded-lg shadow-md">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                    <i class="fas fa-user text-orange-500 mr-2"></i>
+                    Thông tin cá nhân
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Họ và tên</label>
+                        <div class="bg-gray-50 rounded-lg p-3 text-gray-900">
+                            {{ current_user.full_name }}
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Tên đăng nhập</label>
+                        <div class="bg-gray-50 rounded-lg p-3 text-gray-900">
+                            {{ current_user.username }}
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <div class="bg-gray-50 rounded-lg p-3 text-gray-900">
+                            {{ current_user.email }}
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Vai trò</label>
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            {% if current_user.is_admin() %}
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
+                                <i class="fas fa-crown mr-1"></i> Quản trị viên
+                            </span>
+                            {% elif current_user.is_manager() %}
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                                <i class="fas fa-user-tie mr-1"></i> Quản sinh
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                <i class="fas fa-chalkboard-teacher mr-1"></i> Giáo viên
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Trạng thái</label>
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            {% if current_user.is_active %}
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                <i class="fas fa-check-circle mr-1"></i> Hoạt động
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                                <i class="fas fa-times-circle mr-1"></i> Không hoạt động
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Ngày tạo</label>
+                        <div class="bg-gray-50 rounded-lg p-3 text-gray-900">
+                            {{ current_user.created_at.strftime('%d/%m/%Y %H:%M') if current_user.created_at else 'Không có thông tin' }}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="mt-8 flex flex-wrap gap-4">
+                    <button class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition-colors duration-200">
+                        <i class="fas fa-edit mr-2"></i>
+                        Chỉnh sửa thông tin
+                    </button>
+                    <button class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition-colors duration-200">
+                        <i class="fas fa-key mr-2"></i>
+                        Đổi mật khẩu
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats & Actions -->
+    <div class="space-y-6">
+        <!-- Quick Stats -->
+        <div class="bg-white rounded-lg shadow-md">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                    <i class="fas fa-chart-bar text-orange-500 mr-2"></i>
+                    Thống kê nhanh
+                </h3>
+            </div>
+            <div class="p-6 space-y-4">
+                {% if current_user.is_teacher() %}
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-600">Lớp đang dạy:</span>
+                    <span class="font-semibold text-gray-900">{{ current_user.teaching_schedules.count() if current_user.teaching_schedules else 0 }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-600">Buổi/tuần:</span>
+                    <span class="font-semibold text-gray-900">{{ current_user.teaching_schedules.count() if current_user.teaching_schedules else 0 }}</span>
+                </div>
+                {% elif current_user.is_manager() %}
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-600">Lớp quản lý:</span>
+                    <span class="font-semibold text-gray-900">{{ current_user.managed_classes.count() if current_user.managed_classes else 0 }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-600">Học sinh:</span>
+                    <span class="font-semibold text-gray-900">{{ current_user.managed_classes.join('students').count() if current_user.managed_classes else 0 }}</span>
+                </div>
+                {% endif %}
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-600">Đăng nhập lần cuối:</span>
+                    <span class="font-semibold text-gray-900">Hôm nay</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-lg shadow-md">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                    <i class="fas fa-bolt text-orange-500 mr-2"></i>
+                    Thao tác nhanh
+                </h3>
+            </div>
+            <div class="p-6 space-y-3">
+                <a href="{{ url_for('main.dashboard') }}" 
+                   class="flex items-center p-3 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors duration-200">
+                    <i class="fas fa-tachometer-alt text-orange-600 mr-3"></i>
+                    <span class="text-gray-900 font-medium">Dashboard</span>
+                </a>
+                
+                <a href="{{ url_for('calendar.calendar_view') }}" 
+                   class="flex items-center p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors duration-200">
+                    <i class="fas fa-calendar text-blue-600 mr-3"></i>
+                    <span class="text-gray-900 font-medium">Lịch dạy</span>
+                </a>
+                
+                {% if current_user.is_admin() or current_user.is_manager() %}
+                <a href="{{ url_for('manager.classes') }}" 
+                   class="flex items-center p-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors duration-200">
+                    <i class="fas fa-chalkboard text-green-600 mr-3"></i>
+                    <span class="text-gray-900 font-medium">Quản lý lớp học</span>
+                </a>
+                {% endif %}
+                
+                <a href="{{ url_for('auth.logout') }}" 
+                   class="flex items-center p-3 bg-red-50 hover:bg-red-100 rounded-lg transition-colors duration-200">
+                    <i class="fas fa-sign-out-alt text-red-600 mr-3"></i>
+                    <span class="text-gray-900 font-medium">Đăng xuất</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- System Info -->
+        <div class="bg-white rounded-lg shadow-md">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                    <i class="fas fa-info-circle text-orange-500 mr-2"></i>
+                    Thông tin hệ thống
+                </h3>
+            </div>
+            <div class="p-6 space-y-3 text-sm">
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Phiên bản:</span>
+                    <span class="font-medium text-gray-900">v1.0.0</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Trạng thái:</span>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <i class="fas fa-circle text-green-400 mr-1 text-xs"></i>
+                        Hoạt động
+                    </span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Hỗ trợ:</span>
+                    <span class="font-medium text-gray-900">24/7</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add animation to profile cards
+    const cards = document.querySelectorAll('.bg-white');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s ease-out';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+
+    // Add click handlers for edit buttons
+    document.querySelectorAll('button').forEach(button => {
+        button.addEventListener('click', function() {
+            if (this.textContent.includes('Chỉnh sửa')) {
+                notify.info('Tính năng chỉnh sửa thông tin đang được phát triển');
+            } else if (this.textContent.includes('Đổi mật khẩu')) {
+                notify.info('Tính năng đổi mật khẩu đang được phát triển');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

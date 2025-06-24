@@ -1,0 +1,214 @@
+{% extends "base_tailwind.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">
+            <i class="fas fa-chart-line text-green-500 mr-2"></i>
+            Quản lý tài chính
+        </h1>
+        <div class="flex space-x-3">
+            <a href="{{ url_for('financial.create_transaction') }}" 
+               class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-200">
+                <i class="fas fa-plus mr-2"></i>Thêm giao dịch
+            </a>
+            <a href="{{ url_for('financial.create_donation') }}" 
+               class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition duration-200">
+                <i class="fas fa-gift mr-2"></i>Nhận quyên góp
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+        <!-- Monthly Income -->
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+            <div class="flex items-center">
+                <div class="flex-1">
+                    <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Thu nhập tháng</h3>
+                    <p class="text-2xl font-bold text-green-600">{{ "{:,.0f}".format(monthly_income) }} VNĐ</p>
+                </div>
+                <div class="flex-shrink-0">
+                    <i class="fas fa-arrow-up text-green-500 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Expense -->
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500">
+            <div class="flex items-center">
+                <div class="flex-1">
+                    <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Chi tiêu tháng</h3>
+                    <p class="text-2xl font-bold text-red-600">{{ "{:,.0f}".format(monthly_expense) }} VNĐ</p>
+                </div>
+                <div class="flex-shrink-0">
+                    <i class="fas fa-arrow-down text-red-500 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Net Income -->
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-{{ 'green' if net_income >= 0 else 'red' }}-500">
+            <div class="flex items-center">
+                <div class="flex-1">
+                    <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Thu nhập ròng</h3>
+                    <p class="text-2xl font-bold text-{{ 'green' if net_income >= 0 else 'red' }}-600">
+                        {{ "{:,.0f}".format(net_income) }} VNĐ
+                    </p>
+                </div>
+                <div class="flex-shrink-0">
+                    <i class="fas fa-balance-scale text-{{ 'green' if net_income >= 0 else 'red' }}-500 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Assets -->
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500">
+            <div class="flex items-center">
+                <div class="flex-1">
+                    <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Tài sản quyên góp</h3>
+                    <p class="text-2xl font-bold text-purple-600">{{ total_assets }}</p>
+                    <p class="text-sm text-gray-500">{{ available_assets }} có sẵn, {{ distributed_assets }} đã phân phối</p>
+                </div>
+                <div class="flex-shrink-0">
+                    <i class="fas fa-gift text-purple-500 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Donation Expense -->
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500">
+            <div class="flex items-center">
+                <div class="flex-1">
+                    <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Chi quyên góp</h3>
+                    <p class="text-2xl font-bold text-orange-600">{{ "{:,.0f}".format(donation_expense) }} VNĐ</p>
+                    <p class="text-sm text-gray-500">Phân phối tài sản tháng này</p>
+                </div>
+                <div class="flex-shrink-0">
+                    <i class="fas fa-hand-holding-usd text-orange-500 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Quick Links -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                <i class="fas fa-bolt text-yellow-500 mr-2"></i>
+                Thao tác nhanh
+            </h3>
+            <div class="grid grid-cols-2 gap-4">
+                <a href="{{ url_for('financial.transactions') }}" 
+                   class="flex items-center p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition duration-200">
+                    <i class="fas fa-exchange-alt text-blue-500 mr-3"></i>
+                    <span class="text-sm font-medium text-blue-700">Quản lý thu chi</span>
+                </a>
+                <a href="{{ url_for('financial.donations') }}" 
+                   class="flex items-center p-3 bg-green-50 hover:bg-green-100 rounded-lg transition duration-200">
+                    <i class="fas fa-hands-helping text-green-500 mr-3"></i>
+                    <span class="text-sm font-medium text-green-700">Tài sản quyên góp</span>
+                </a>
+                <a href="{{ url_for('financial.reports') }}"
+                   class="flex items-center p-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition duration-200">
+                    <i class="fas fa-chart-bar text-purple-500 mr-3"></i>
+                    <span class="text-sm font-medium text-purple-700">Báo cáo</span>
+                </a>
+                <a href="{{ url_for('financial.donation_records') }}"
+                   class="flex items-center p-3 bg-red-50 hover:bg-red-100 rounded-lg transition duration-200">
+                    <i class="fas fa-book text-red-500 mr-3"></i>
+                    <span class="text-sm font-medium text-red-700">Bản ghi quyên góp</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Recent Donations -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                <i class="fas fa-gift text-green-500 mr-2"></i>
+                Quyên góp gần đây
+            </h3>
+            {% if recent_donations %}
+                <div class="space-y-3">
+                    {% for donation in recent_donations %}
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex-1">
+                            <p class="font-medium text-gray-800">{{ donation.asset_name }}</p>
+                            <p class="text-sm text-gray-500">{{ donation.donor_name or 'Ẩn danh' }}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                       bg-{{ donation.status_color }}-100 text-{{ donation.status_color }}-800">
+                                {{ donation.status_display }}
+                            </span>
+                            <p class="text-xs text-gray-500 mt-1">{{ donation.donation_date.strftime('%d/%m/%Y') }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-500 text-center py-4">Chưa có quyên góp nào</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-gray-800">
+                <i class="fas fa-history text-blue-500 mr-2"></i>
+                Giao dịch gần đây
+            </h3>
+            <a href="{{ url_for('financial.transactions') }}" 
+               class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                Xem tất cả →
+            </a>
+        </div>
+        
+        {% if recent_transactions %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giao dịch</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loại</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số tiền</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for transaction in recent_transactions %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">{{ transaction.title }}</p>
+                                    <p class="text-sm text-gray-500">{{ transaction.category }}</p>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                           bg-{{ 'green' if transaction.transaction_type == 'income' else 'red' }}-100 
+                                           text-{{ 'green' if transaction.transaction_type == 'income' else 'red' }}-800">
+                                    {{ transaction.transaction_type_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium
+                                     text-{{ 'green' if transaction.transaction_type == 'income' else 'red' }}-600">
+                                {{ "{:,.0f}".format(transaction.amount) }} VNĐ
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ transaction.transaction_date.strftime('%d/%m/%Y') }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-gray-500 text-center py-8">Chưa có giao dịch nào</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

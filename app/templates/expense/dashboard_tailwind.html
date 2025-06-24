@@ -1,0 +1,310 @@
+{% extends "base_tailwind.html" %}
+
+{% block content %}
+<!-- Header -->
+<div class="bg-white rounded-lg shadow-md p-6 mb-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 flex items-center">
+                <i class="fas fa-chart-line text-orange-500 mr-3"></i>
+                Dashboard Chi tiêu
+            </h1>
+            <p class="text-gray-600 mt-1">Tổng quan quản lý chi tiêu và ngân sách</p>
+        </div>
+        
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ url_for('expense.create_expense') }}" 
+               class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center">
+                <i class="fas fa-plus mr-2"></i>
+                Thêm chi tiêu
+            </a>
+            <a href="{{ url_for('expense.expenses') }}" 
+               class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center">
+                <i class="fas fa-list mr-2"></i>
+                Danh sách
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-money-bill-wave text-blue-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Chi tiêu tháng này</p>
+                <p class="text-2xl font-bold text-gray-900">{{ "{:,.0f}".format(monthly_expenses) }} ₫</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-yellow-500">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Chờ duyệt</p>
+                <p class="text-2xl font-bold text-gray-900">{{ pending_count }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-tags text-green-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Danh mục</p>
+                <p class="text-2xl font-bold text-gray-900">{{ categories_count }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-wallet text-purple-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Ngân sách hoạt động</p>
+                <p class="text-2xl font-bold text-gray-900">{{ active_budgets|length }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts and Budget Overview -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <!-- Expense by Category Chart -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <i class="fas fa-chart-pie text-blue-500 mr-2"></i>
+            Chi tiêu theo danh mục (tháng này)
+        </h3>
+        {% if category_stats %}
+        <div class="space-y-3">
+            {% for stat in category_stats %}
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="w-4 h-4 rounded-full mr-3" style="background-color: {{ stat.color }}"></div>
+                    <span class="text-sm font-medium text-gray-700">{{ stat.name }}</span>
+                </div>
+                <span class="text-sm font-bold text-gray-900">{{ "{:,.0f}".format(stat.total) }} ₫</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-8 text-gray-500">
+            <i class="fas fa-chart-pie text-4xl mb-2"></i>
+            <p>Chưa có dữ liệu chi tiêu</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Active Budgets -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <i class="fas fa-wallet text-green-500 mr-2"></i>
+            Ngân sách đang hoạt động
+        </h3>
+        {% if active_budgets %}
+        <div class="space-y-4">
+            {% for budget in active_budgets %}
+            <div class="border border-gray-200 rounded-lg p-4">
+                <div class="flex justify-between items-start mb-2">
+                    <h4 class="font-medium text-gray-900">{{ budget.name }}</h4>
+                    <span class="text-sm text-gray-500">{{ budget.usage_percentage|round(1) }}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                    <div class="h-2 rounded-full 
+                        {% if budget.usage_percentage > 90 %}bg-red-500
+                        {% elif budget.usage_percentage > 70 %}bg-yellow-500
+                        {% else %}bg-green-500{% endif %}"
+                         style="width: {{ budget.usage_percentage|round(1) }}%"></div>
+                </div>
+                <div class="flex justify-between text-sm text-gray-600">
+                    <span>Đã dùng: {{ "{:,.0f}".format(budget.spent_amount) }} ₫</span>
+                    <span>Tổng: {{ "{:,.0f}".format(budget.total_amount) }} ₫</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="mt-4">
+            <a href="{{ url_for('expense.budgets') }}" 
+               class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                Xem tất cả ngân sách →
+            </a>
+        </div>
+        {% else %}
+        <div class="text-center py-8 text-gray-500">
+            <i class="fas fa-wallet text-4xl mb-2"></i>
+            <p>Chưa có ngân sách nào</p>
+            <a href="{{ url_for('expense.create_budget') }}" 
+               class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                Tạo ngân sách đầu tiên
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Recent Expenses -->
+<div class="bg-white rounded-lg shadow-md overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+            <i class="fas fa-history text-purple-500 mr-2"></i>
+            Chi tiêu gần đây
+        </h3>
+        <a href="{{ url_for('expense.expenses') }}" 
+           class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+            Xem tất cả →
+        </a>
+    </div>
+    
+    {% if recent_expenses %}
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Chi tiêu
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Số tiền
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Danh mục
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Trạng thái
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Ngày
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for expense in recent_expenses %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div>
+                            <div class="text-sm font-medium text-gray-900">{{ expense.title }}</div>
+                            <div class="text-sm text-gray-500">{{ expense.vendor or 'Không có nhà cung cấp' }}</div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-bold text-gray-900">{{ "{:,.0f}".format(expense.amount) }} ₫</div>
+                        <div class="text-sm text-gray-500">{{ expense.payment_method_display }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                              style="background-color: {{ expense.category.color }}20; color: {{ expense.category.color }}">
+                            {{ expense.category.name }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                            {% if expense.status == 'approved' %}bg-green-100 text-green-800
+                            {% elif expense.status == 'pending' %}bg-yellow-100 text-yellow-800
+                            {% else %}bg-red-100 text-red-800{% endif %}">
+                            {{ expense.status_display }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ expense.expense_date.strftime('%d/%m/%Y') }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-12">
+        <i class="fas fa-receipt text-gray-400 text-4xl mb-4"></i>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">Chưa có chi tiêu nào</h3>
+        <p class="text-gray-500 mb-4">Bắt đầu bằng cách thêm chi tiêu đầu tiên</p>
+        <a href="{{ url_for('expense.create_expense') }}" 
+           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700">
+            <i class="fas fa-plus mr-2"></i>
+            Thêm chi tiêu
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Quick Actions -->
+<div class="bg-white rounded-lg shadow-md p-6 mt-6">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+        <i class="fas fa-bolt text-orange-500 mr-2"></i>
+        Thao tác nhanh
+    </h3>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <a href="{{ url_for('expense.create_expense') }}" 
+           class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+            <i class="fas fa-plus text-orange-500 text-xl mr-3"></i>
+            <div>
+                <div class="font-medium text-gray-900">Thêm chi tiêu</div>
+                <div class="text-sm text-gray-500">Tạo chi tiêu mới</div>
+            </div>
+        </a>
+        
+        <a href="{{ url_for('expense.categories') }}" 
+           class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+            <i class="fas fa-tags text-blue-500 text-xl mr-3"></i>
+            <div>
+                <div class="font-medium text-gray-900">Danh mục</div>
+                <div class="text-sm text-gray-500">Quản lý danh mục</div>
+            </div>
+        </a>
+        
+        <a href="{{ url_for('expense.budgets') }}" 
+           class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+            <i class="fas fa-wallet text-green-500 text-xl mr-3"></i>
+            <div>
+                <div class="font-medium text-gray-900">Ngân sách</div>
+                <div class="text-sm text-gray-500">Quản lý ngân sách</div>
+            </div>
+        </a>
+        
+        <a href="{{ url_for('expense.expenses', status='pending') }}" 
+           class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+            <i class="fas fa-clock text-yellow-500 text-xl mr-3"></i>
+            <div>
+                <div class="font-medium text-gray-900">Chờ duyệt</div>
+                <div class="text-sm text-gray-500">{{ pending_count }} chi tiêu</div>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Animation on load
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.bg-white');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s ease-out';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
+{% endblock %}

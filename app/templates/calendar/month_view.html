@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-calendar-alt"></i> Lịch tháng</h2>
+            <div class="btn-group">
+                <a href="{{ url_for('calendar.calendar_view') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-calendar-week"></i> Lịch tuần
+                </a>
+                <a href="{{ url_for('calendar.month_view') }}" class="btn btn-primary">
+                    <i class="fas fa-calendar"></i> Lịch tháng
+                </a>
+            </div>
+        </div>
+        <hr>
+    </div>
+</div>
+
+<!-- Month Navigation -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <a href="{{ url_for('calendar.month_view', year=prev_month.year, month=prev_month.month) }}" 
+                       class="btn btn-outline-primary">
+                        <i class="fas fa-chevron-left"></i> Tháng trước
+                    </a>
+                    
+                    <h4 class="mb-0">
+                        Tháng {{ current_month.month }}/{{ current_month.year }}
+                    </h4>
+                    
+                    <a href="{{ url_for('calendar.month_view', year=next_month.year, month=next_month.month) }}" 
+                       class="btn btn-outline-primary">
+                        Tháng sau <i class="fas fa-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Calendar Grid -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-bordered mb-0" style="table-layout: fixed;">
+                        <thead class="table-primary">
+                            <tr>
+                                <th class="text-center" style="width: 14.28%;">Thứ 2</th>
+                                <th class="text-center" style="width: 14.28%;">Thứ 3</th>
+                                <th class="text-center" style="width: 14.28%;">Thứ 4</th>
+                                <th class="text-center" style="width: 14.28%;">Thứ 5</th>
+                                <th class="text-center" style="width: 14.28%;">Thứ 6</th>
+                                <th class="text-center" style="width: 14.28%;">Thứ 7</th>
+                                <th class="text-center" style="width: 14.28%;">Chủ nhật</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for week in calendar_weeks %}
+                            <tr style="height: 120px;">
+                                {% for day in week %}
+                                <td class="p-2 {% if day.month != current_month.month %}text-muted bg-light{% endif %}" 
+                                    style="vertical-align: top;">
+                                    <div class="d-flex justify-content-between align-items-start mb-1">
+                                        <span class="fw-bold {% if day == today %}text-primary{% endif %}">
+                                            {{ day.day }}
+                                        </span>
+                                        {% if day == today %}
+                                        <span class="badge bg-primary">Hôm nay</span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    {% if day in schedule_by_date %}
+                                    <div class="schedule-items">
+                                        {% for schedule in schedule_by_date[day] %}
+                                        <div class="schedule-item mb-1 p-1 rounded" 
+                                             style="background-color: {{ schedule.get_color() }}20; border-left: 3px solid {{ schedule.get_color() }}; font-size: 0.75rem;">
+                                            <div class="fw-bold">{{ schedule.time_slot }}</div>
+                                            <div>{{ schedule.class_name }}</div>
+                                            <div class="text-muted">{{ schedule.teacher.full_name if schedule.teacher else 'Chưa phân công' }}</div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Legend -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6><i class="fas fa-info-circle"></i> Chú thích</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="me-2" style="width: 20px; height: 20px; background-color: #007bff20; border-left: 3px solid #007bff;"></div>
+                            <span>Buổi sáng (7:30-11:30)</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="me-2" style="width: 20px; height: 20px; background-color: #28a74520; border-left: 3px solid #28a745;"></div>
+                            <span>Buổi chiều (13:30-17:30)</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="me-2" style="width: 20px; height: 20px; background-color: #ffc10720; border-left: 3px solid #ffc107;"></div>
+                            <span>Buổi tối (18:00-21:00)</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge bg-primary me-2">Hôm nay</span>
+                            <span>Ngày hiện tại</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h4>{{ total_schedules }}</h4>
+                <p class="mb-0">Tổng tiết học</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h4>{{ assigned_schedules }}</h4>
+                <p class="mb-0">Đã phân công</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <h4>{{ unassigned_schedules }}</h4>
+                <p class="mb-0">Chưa phân công</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h4>{{ active_classes }}</h4>
+                <p class="mb-0">Lớp đang hoạt động</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Add click handlers for schedule items
+document.querySelectorAll('.schedule-item').forEach(item => {
+    item.style.cursor = 'pointer';
+    item.addEventListener('click', function() {
+        // You can add modal or navigation to schedule details here
+        console.log('Schedule clicked:', this);
+    });
+});
+
+// Highlight today
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    
+    // Add any additional highlighting or interactions
+});
+</script>
+{% endblock %}

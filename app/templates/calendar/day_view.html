@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-calendar-day"></i> Lịch ngày {{ view_date.strftime('%d/%m/%Y') }}</h2>
+            <div class="btn-group">
+                <a href="{{ url_for('calendar.calendar_view') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left"></i> Quay lại lịch tuần
+                </a>
+            </div>
+        </div>
+        <hr>
+    </div>
+</div>
+
+<!-- Day Navigation -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <a href="{{ url_for('calendar.day_view', date=(view_date - timedelta(days=1)).strftime('%Y-%m-%d')) }}"
+                       class="btn btn-outline-primary">
+                        <i class="fas fa-chevron-left"></i> Ngày trước
+                    </a>
+
+                    <h4 class="mb-0">
+                        {{ day_name }}, {{ view_date.strftime('%d/%m/%Y') }}
+                    </h4>
+
+                    <a href="{{ url_for('calendar.day_view', date=(view_date + timedelta(days=1)).strftime('%Y-%m-%d')) }}"
+                       class="btn btn-outline-primary">
+                        Ngày sau <i class="fas fa-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Schedule for the day -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-clock"></i> Lịch học trong ngày</h5>
+            </div>
+            <div class="card-body">
+                {% if schedule_data %}
+                <div class="row">
+                    {% for item in schedule_data %}
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card border-primary schedule-detail-card"
+                             onclick="showScheduleModal({{ item.schedule.id }}, '{{ view_date.strftime('%Y-%m-%d') }}')">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-chalkboard"></i> {{ item.schedule.class_obj.name }}
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">
+                                    <strong>{{ item.schedule.session_name }}:</strong> {{ item.schedule.time_range }}<br>
+                                    {% if item.schedule.subject %}<strong>Môn:</strong> {{ item.schedule.subject }}<br>{% endif %}
+                                    {% if item.schedule.room %}<strong>Phòng:</strong> {{ item.schedule.room }}<br>{% endif %}
+                                    <strong>Giáo viên:</strong> {{ item.schedule.teacher.full_name }}<br>
+                                    <strong>Sĩ số:</strong> {{ item.schedule.class_obj.student_count }} HS
+                                </p>
+
+                                {% if item.attendance_records %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle"></i> Đã điểm danh ({{ item.attendance_summary.present }}/{{ item.schedule.class_obj.student_count }})
+                                </span>
+                                {% else %}
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-clock"></i> Chưa điểm danh
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Không có lịch học trong ngày này</h5>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Schedule Detail Modal -->
+<div class="modal fade" id="scheduleDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Chi tiết lịch học</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="scheduleDetailContent">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showScheduleModal(scheduleId, date) {
+    // Load schedule details via AJAX
+    fetch(`/calendar/schedule/${scheduleId}/detail?date=${date}`)
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('scheduleDetailContent').innerHTML = html;
+            var modal = new bootstrap.Modal(document.getElementById('scheduleDetailModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error loading schedule details:', error);
+            alert('Không thể tải chi tiết lịch học');
+        });
+}
+
+// Add hover effects
+document.querySelectorAll('.schedule-detail-card').forEach(card => {
+    card.style.cursor = 'pointer';
+    card.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-5px)';
+        this.style.boxShadow = '0 10px 25px rgba(0,0,0,0.15)';
+    });
+    
+    card.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0)';
+        this.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
+    });
+});
+</script>
+{% endblock %}

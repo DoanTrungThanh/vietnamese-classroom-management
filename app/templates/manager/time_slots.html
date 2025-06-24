@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-clock"></i> Quản lý khung giờ</h2>
+            <a href="{{ url_for('manager.add_time_slot') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Thêm khung giờ
+            </a>
+        </div>
+        <hr>
+    </div>
+</div>
+
+<!-- Time Slots by Session -->
+{% for session_type, slots in slots_by_session.items() %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white;">
+                <h5 class="mb-0">
+                    <i class="fas fa-sun"></i>
+                    {% if session_type == 'morning' %}Buổi sáng
+                    {% elif session_type == 'afternoon' %}Buổi chiều
+                    {% elif session_type == 'evening' %}Buổi tối
+                    {% else %}{{ session_type|title }}
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if slots %}
+                <div class="row">
+                    {% for slot in slots %}
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card border-primary">
+                            <div class="card-body">
+                                <h6 class="card-title text-primary">
+                                    <i class="fas fa-clock"></i> {{ slot.name }}
+                                </h6>
+                                <p class="card-text">
+                                    <strong>Thời gian:</strong> {{ slot.time_range }}<br>
+                                    {% if slot.description %}
+                                    <strong>Mô tả:</strong> {{ slot.description }}<br>
+                                    {% endif %}
+                                    <small class="text-muted">
+                                        Tạo bởi: {{ slot.creator.full_name if slot.creator else 'Hệ thống' }}
+                                    </small>
+                                </p>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('manager.edit_time_slot', slot_id=slot.id) }}" 
+                                       class="btn btn-outline-primary">
+                                        <i class="fas fa-edit"></i> Sửa
+                                    </a>
+                                    <form method="POST" action="{{ url_for('manager.delete_time_slot', slot_id=slot.id) }}" 
+                                          class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa khung giờ này?')">
+                                        <button type="submit" class="btn btn-outline-danger">
+                                            <i class="fas fa-trash"></i> Xóa
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-clock fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Chưa có khung giờ nào cho buổi này</h5>
+                    <a href="{{ url_for('manager.add_time_slot') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Thêm khung giờ đầu tiên
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% if not slots_by_session %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-clock fa-4x text-muted mb-4"></i>
+                <h4 class="text-muted">Chưa có khung giờ nào</h4>
+                <p class="text-muted mb-4">Tạo khung giờ để quản lý lịch dạy hiệu quả hơn</p>
+                <a href="{{ url_for('manager.add_time_slot') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus"></i> Tạo khung giờ đầu tiên
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6><i class="fas fa-bolt"></i> Thao tác nhanh</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-2">
+                        <a href="{{ url_for('manager.add_time_slot') }}" class="btn btn-outline-primary btn-block w-100">
+                            <i class="fas fa-plus"></i> Thêm khung giờ mới
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <a href="{{ url_for('manager.schedule') }}" class="btn btn-outline-success btn-block w-100">
+                            <i class="fas fa-calendar-alt"></i> Quản lý lịch dạy
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <a href="{{ url_for('manager.classes') }}" class="btn btn-outline-info btn-block w-100">
+                            <i class="fas fa-chalkboard"></i> Quản lý lớp học
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <i class="fas fa-clock fa-2x mb-3" style="color: var(--primary-color);"></i>
+            <div class="stat-number">{{ time_slots|length }}</div>
+            <div class="stat-label">Tổng khung giờ</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <i class="fas fa-sun fa-2x mb-3" style="color: var(--warning-color);"></i>
+            <div class="stat-number">{{ slots_by_session.get('morning', [])|length }}</div>
+            <div class="stat-label">Buổi sáng</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <i class="fas fa-cloud-sun fa-2x mb-3" style="color: var(--success-color);"></i>
+            <div class="stat-number">{{ slots_by_session.get('afternoon', [])|length }}</div>
+            <div class="stat-label">Buổi chiều</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <i class="fas fa-moon fa-2x mb-3" style="color: var(--info-color);"></i>
+            <div class="stat-number">{{ slots_by_session.get('evening', [])|length }}</div>
+            <div class="stat-label">Buổi tối</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Add hover effects to time slot cards
+document.querySelectorAll('.card.border-primary').forEach(card => {
+    card.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-5px)';
+        this.style.boxShadow = '0 10px 25px rgba(0,0,0,0.15)';
+        this.style.transition = 'all 0.3s ease';
+    });
+    
+    card.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0)';
+        this.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
+    });
+});
+
+// Success notification for actions
+document.addEventListener('DOMContentLoaded', function() {
+    // Show success message if redirected after action
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success')) {
+        notify.success('Thao tác thành công!');
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,403 @@
+{% extends "base_tailwind.html" %}
+
+{% block content %}
+<!-- Header -->
+<div class="bg-white rounded-lg shadow-md p-6 mb-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 flex items-center">
+                <i class="fas fa-bell text-orange-500 mr-3"></i>
+                Tạo thông báo lịch học
+            </h1>
+            <p class="text-gray-600 mt-1">Tạo mẫu thông báo lịch học để gửi cho phụ huynh</p>
+        </div>
+        
+        <div class="flex space-x-2">
+            <a href="{{ url_for('manager.schedule') }}" 
+               class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Quay lại
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Generator Form -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Input Form -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <i class="fas fa-cog text-blue-500 mr-2"></i>
+            Cấu hình thông báo
+        </h3>
+        
+        <form id="notificationForm" class="space-y-4">
+            <!-- Date Selection -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-calendar text-blue-500 mr-1"></i>
+                    Chọn ngày *
+                </label>
+
+                <!-- Quick Date Buttons -->
+                <div class="grid grid-cols-3 gap-2 mb-3">
+                    <button type="button" onclick="setDateToday()"
+                            class="px-3 py-2 text-sm bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-colors duration-200">
+                        <i class="fas fa-calendar-day mr-1"></i>
+                        Hôm nay
+                    </button>
+                    <button type="button" onclick="setDateTomorrow()"
+                            class="px-3 py-2 text-sm bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition-colors duration-200">
+                        <i class="fas fa-calendar-plus mr-1"></i>
+                        Ngày mai
+                    </button>
+                    <button type="button" onclick="setDateMonday()"
+                            class="px-3 py-2 text-sm bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg transition-colors duration-200">
+                        <i class="fas fa-calendar-week mr-1"></i>
+                        Thứ 2
+                    </button>
+                </div>
+
+                <!-- Date Input with better styling -->
+                <div class="relative">
+                    <input type="date" name="notification_date" id="notification_date" required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-lg"
+                           value="{{ today }}">
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <i class="fas fa-calendar-alt text-gray-400"></i>
+                    </div>
+                </div>
+
+                <!-- Selected Date Display -->
+                <div id="selectedDateDisplay" class="mt-2 text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">
+                    <i class="fas fa-info-circle text-blue-500 mr-1"></i>
+                    <span id="selectedDateText">Ngày được chọn: {{ today }}</span>
+                </div>
+            </div>
+            
+            <!-- Class Selection -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-chalkboard text-green-500 mr-1"></i>
+                    Chọn lớp học
+                </label>
+                <select name="class_id" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                    <option value="">Tất cả lớp học</option>
+                    {% for class in classes %}
+                    <option value="{{ class.id }}">{{ class.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Template Type -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-file-alt text-purple-500 mr-1"></i>
+                    Loại thông báo *
+                </label>
+                <select name="template_type" required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                    <option value="daily">Lịch học hàng ngày</option>
+                    <option value="weekly">Lịch học tuần</option>
+                    <option value="reminder">Nhắc nhở học phí</option>
+                    <option value="event">Thông báo sự kiện</option>
+                    <option value="custom">Tùy chỉnh</option>
+                </select>
+            </div>
+            
+            <!-- Custom Message (for custom template) -->
+            <div id="customMessageDiv" class="hidden">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-edit text-orange-500 mr-1"></i>
+                    Nội dung tùy chỉnh
+                </label>
+                <textarea name="custom_message" rows="4"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          placeholder="Nhập nội dung thông báo tùy chỉnh..."></textarea>
+            </div>
+            
+            <!-- Additional Options -->
+            <div class="space-y-3">
+                <div class="flex items-center">
+                    <input type="checkbox" name="include_teacher" id="include_teacher" checked
+                           class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded">
+                    <label for="include_teacher" class="ml-2 block text-sm text-gray-900">
+                        Bao gồm thông tin giáo viên
+                    </label>
+                </div>
+                
+                <div class="flex items-center">
+                    <input type="checkbox" name="include_time" id="include_time" checked
+                           class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded">
+                    <label for="include_time" class="ml-2 block text-sm text-gray-900">
+                        Bao gồm thời gian học
+                    </label>
+                </div>
+                
+                <div class="flex items-center">
+                    <input type="checkbox" name="include_contact" id="include_contact"
+                           class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded">
+                    <label for="include_contact" class="ml-2 block text-sm text-gray-900">
+                        Bao gồm thông tin liên hệ
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Generate Button -->
+            <div class="pt-4">
+                <button type="submit" 
+                        class="w-full bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors duration-200">
+                    <i class="fas fa-magic mr-2"></i>
+                    Tạo thông báo
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Output Preview -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                <i class="fas fa-eye text-green-500 mr-2"></i>
+                Xem trước thông báo
+            </h3>
+            <div class="flex space-x-2">
+                <button onclick="copyToClipboard()" 
+                        class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm transition-colors duration-200">
+                    <i class="fas fa-copy mr-1"></i>
+                    Sao chép
+                </button>
+                <button onclick="downloadText()" 
+                        class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm transition-colors duration-200">
+                    <i class="fas fa-download mr-1"></i>
+                    Tải về
+                </button>
+            </div>
+        </div>
+        
+        <div id="notificationPreview" class="border border-gray-200 rounded-lg p-4 min-h-96 bg-gray-50">
+            <div class="text-center text-gray-500 py-8">
+                <i class="fas fa-file-text text-4xl mb-2"></i>
+                <p>Chọn cấu hình và nhấn "Tạo thông báo" để xem kết quả</p>
+            </div>
+        </div>
+        
+        <!-- Character Count -->
+        <div class="mt-2 text-sm text-gray-500 text-right">
+            <span id="charCount">0</span> ký tự
+        </div>
+    </div>
+</div>
+
+<!-- Quick Templates -->
+<div class="bg-white rounded-lg shadow-md p-6 mt-6">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+        <i class="fas fa-templates text-purple-500 mr-2"></i>
+        Mẫu thông báo nhanh
+    </h3>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <button onclick="useQuickTemplate('daily')" 
+                class="p-4 border border-gray-200 rounded-lg hover:bg-orange-50 hover:border-orange-300 transition-colors duration-200 text-left">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-calendar-day text-blue-500 mr-2"></i>
+                <span class="font-medium">Lịch học hôm nay</span>
+            </div>
+            <p class="text-sm text-gray-600">Thông báo lịch học trong ngày</p>
+        </button>
+        
+        <button onclick="useQuickTemplate('reminder')" 
+                class="p-4 border border-gray-200 rounded-lg hover:bg-orange-50 hover:border-orange-300 transition-colors duration-200 text-left">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-money-bill text-green-500 mr-2"></i>
+                <span class="font-medium">Nhắc học phí</span>
+            </div>
+            <p class="text-sm text-gray-600">Nhắc nhở đóng học phí</p>
+        </button>
+        
+        <button onclick="useQuickTemplate('event')" 
+                class="p-4 border border-gray-200 rounded-lg hover:bg-orange-50 hover:border-orange-300 transition-colors duration-200 text-left">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-star text-purple-500 mr-2"></i>
+                <span class="font-medium">Sự kiện đặc biệt</span>
+            </div>
+            <p class="text-sm text-gray-600">Thông báo sự kiện, hoạt động</p>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentNotificationText = '';
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('notificationForm');
+    const templateTypeSelect = document.querySelector('select[name="template_type"]');
+    const customMessageDiv = document.getElementById('customMessageDiv');
+    const dateInput = document.getElementById('notification_date');
+
+    // Handle template type change
+    templateTypeSelect.addEventListener('change', function() {
+        if (this.value === 'custom') {
+            customMessageDiv.classList.remove('hidden');
+        } else {
+            customMessageDiv.classList.add('hidden');
+        }
+    });
+
+    // Handle date input change
+    dateInput.addEventListener('change', function() {
+        updateSelectedDateDisplay();
+    });
+
+    // Initialize date display
+    updateSelectedDateDisplay();
+    
+    // Handle form submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        generateNotification();
+    });
+    
+    // Auto-generate on input change
+    form.addEventListener('change', function() {
+        if (templateTypeSelect.value !== 'custom') {
+            generateNotification();
+        }
+    });
+});
+
+function generateNotification() {
+    const formData = new FormData(document.getElementById('notificationForm'));
+    const submitButton = document.querySelector('button[type="submit"]');
+    const originalText = submitButton.innerHTML;
+    
+    // Show loading state
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang tạo...';
+    
+    fetch('/manager/notification/generate', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            currentNotificationText = data.notification;
+            document.getElementById('notificationPreview').innerHTML = 
+                `<pre class="whitespace-pre-wrap text-sm text-gray-800">${data.notification}</pre>`;
+            updateCharCount();
+        } else {
+            document.getElementById('notificationPreview').innerHTML = 
+                `<div class="text-center text-red-500 py-8">
+                    <i class="fas fa-exclamation-triangle text-4xl mb-2"></i>
+                    <p>${data.message || 'Có lỗi xảy ra khi tạo thông báo'}</p>
+                </div>`;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('notificationPreview').innerHTML = 
+            `<div class="text-center text-red-500 py-8">
+                <i class="fas fa-exclamation-triangle text-4xl mb-2"></i>
+                <p>Có lỗi xảy ra khi tạo thông báo</p>
+            </div>`;
+    })
+    .finally(() => {
+        // Restore button state
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalText;
+    });
+}
+
+function useQuickTemplate(type) {
+    document.querySelector('select[name="template_type"]').value = type;
+    document.getElementById('customMessageDiv').classList.add('hidden');
+    generateNotification();
+}
+
+function copyToClipboard() {
+    if (!currentNotificationText) {
+        notify.warning('Chưa có nội dung để sao chép');
+        return;
+    }
+    
+    navigator.clipboard.writeText(currentNotificationText).then(function() {
+        notify.success('Đã sao chép thông báo vào clipboard');
+    }, function(err) {
+        notify.error('Không thể sao chép: ' + err);
+    });
+}
+
+function downloadText() {
+    if (!currentNotificationText) {
+        notify.warning('Chưa có nội dung để tải về');
+        return;
+    }
+    
+    const blob = new Blob([currentNotificationText], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = `thong_bao_lich_hoc_${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    
+    notify.success('Đã tải về file thông báo');
+}
+
+function updateCharCount() {
+    const count = currentNotificationText.length;
+    document.getElementById('charCount').textContent = count;
+}
+
+// Date picker helper functions
+function setDateToday() {
+    const today = new Date();
+    const dateString = today.toISOString().split('T')[0];
+    document.getElementById('notification_date').value = dateString;
+    updateSelectedDateDisplay();
+    generateNotification();
+}
+
+function setDateTomorrow() {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dateString = tomorrow.toISOString().split('T')[0];
+    document.getElementById('notification_date').value = dateString;
+    updateSelectedDateDisplay();
+    generateNotification();
+}
+
+function setDateMonday() {
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const daysUntilMonday = dayOfWeek === 0 ? 1 : (8 - dayOfWeek); // Days until next Monday
+    const nextMonday = new Date(today);
+    nextMonday.setDate(today.getDate() + daysUntilMonday);
+    const dateString = nextMonday.toISOString().split('T')[0];
+    document.getElementById('notification_date').value = dateString;
+    updateSelectedDateDisplay();
+    generateNotification();
+}
+
+function updateSelectedDateDisplay() {
+    const dateInput = document.getElementById('notification_date');
+    const selectedDateText = document.getElementById('selectedDateText');
+
+    if (dateInput.value) {
+        const date = new Date(dateInput.value + 'T00:00:00');
+        const dayNames = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+        const dayName = dayNames[date.getDay()];
+        const formattedDate = date.toLocaleDateString('vi-VN');
+
+        selectedDateText.textContent = `Ngày được chọn: ${dayName}, ${formattedDate}`;
+    }
+}
+</script>
+{% endblock %}

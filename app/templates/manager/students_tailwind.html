@@ -1,0 +1,505 @@
+{% extends "base_tailwind.html" %}
+
+{% block content %}
+<!-- Header -->
+<div class="bg-white rounded-lg shadow-md p-6 mb-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 flex items-center">
+                <i class="fas fa-users text-orange-500 mr-3"></i>
+                Quản lý học sinh
+            </h1>
+            <p class="text-gray-600 mt-1">Quản lý thông tin học sinh trong hệ thống</p>
+        </div>
+        
+        <div class="flex flex-wrap gap-2">
+            <a href="/manager/students/create"
+               class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center">
+                <i class="fas fa-plus mr-2"></i>
+                Thêm học sinh
+            </a>
+            <button onclick="exportStudents()" 
+                    class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center">
+                <i class="fas fa-download mr-2"></i>
+                Xuất Excel
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-users text-blue-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Tổng học sinh</p>
+                <p class="text-2xl font-bold text-gray-900">{{ students.total if students.pages else 0 }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-user-check text-green-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Đang học</p>
+                <p class="text-2xl font-bold text-gray-900">{{ students.items|selectattr('is_active')|list|length }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-chalkboard text-purple-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Lớp học</p>
+                <p class="text-2xl font-bold text-gray-900">{{ students.items|map(attribute='class_obj')|unique|list|length }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-percentage text-orange-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Tỷ lệ điểm danh</p>
+                <p class="text-2xl font-bold text-gray-900">
+                    {% set avg_attendance = students.items|map(attribute='attendance_rate')|list %}
+                    {{ "%.1f"|format(avg_attendance|sum / avg_attendance|length) if avg_attendance else 0 }}%
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filter -->
+<div class="bg-white rounded-lg shadow-md p-6 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Tìm kiếm</label>
+            <div class="relative">
+                <input type="text" id="searchInput" placeholder="Tìm theo tên, mã học sinh..." 
+                       class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Lớp học</label>
+            <select id="classFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                <option value="">Tất cả lớp</option>
+                {% for student in students.items %}
+                    {% if student.class_obj %}
+                    <option value="{{ student.class_obj.name }}">{{ student.class_obj.name }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Trạng thái</label>
+            <select id="statusFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                <option value="">Tất cả</option>
+                <option value="active">Đang học</option>
+                <option value="inactive">Đã nghỉ</option>
+            </select>
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Sắp xếp</label>
+            <select id="sortBy" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                <option value="name">Tên học sinh</option>
+                <option value="class">Lớp học</option>
+                <option value="attendance">Tỷ lệ điểm danh</option>
+                <option value="created">Ngày đăng ký</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- Students Table -->
+<div class="bg-white rounded-lg shadow-md overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">Danh sách học sinh</h3>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Học sinh
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Lớp học
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Phụ huynh
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Điểm danh
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Trạng thái
+                    </th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Thao tác
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200" id="studentsTableBody">
+                {% for student in students.items %}
+                <tr class="hover:bg-gray-50 transition-colors duration-200 student-row" 
+                    data-name="{{ student.full_name.lower() }}" 
+                    data-student-id="{{ student.student_id or '' }}"
+                    data-class="{{ student.class_obj.name if student.class_obj else '' }}"
+                    data-status="{{ 'active' if student.is_active else 'inactive' }}"
+                    data-attendance="{{ student.attendance_rate or 0 }}"
+                    data-created="{{ student.created_at.strftime('%Y-%m-%d') if student.created_at else '' }}">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 h-10 w-10">
+                                <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <i class="fas fa-user text-blue-600"></i>
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">{{ student.full_name }}</div>
+                                <div class="text-sm text-gray-500">{{ student.student_id or 'Chưa có mã' }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if student.class_obj %}
+                        <div class="text-sm text-gray-900">{{ student.class_obj.name }}</div>
+                        <div class="text-sm text-gray-500">{{ student.class_obj.student_count }} học sinh</div>
+                        {% else %}
+                        <span class="text-sm text-gray-500">Chưa phân lớp</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ student.parent_name or 'Chưa cập nhật' }}</div>
+                        <div class="text-sm text-gray-500">{{ student.parent_phone or 'Chưa có SĐT' }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 w-16 h-2 bg-gray-200 rounded-full mr-3">
+                                <div class="h-2 rounded-full 
+                                    {% if student.attendance_rate >= 90 %}bg-green-500
+                                    {% elif student.attendance_rate >= 70 %}bg-yellow-500
+                                    {% else %}bg-red-500{% endif %}"
+                                     style="width: {{ student.attendance_rate or 0 }}%"></div>
+                            </div>
+                            <span class="text-sm font-medium text-gray-900">{{ "%.1f"|format(student.attendance_rate or 0) }}%</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if student.is_active %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <i class="fas fa-check-circle mr-1"></i>
+                            Đang học
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            <i class="fas fa-times-circle mr-1"></i>
+                            Đã nghỉ
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div class="flex items-center justify-end space-x-2">
+                            <button onclick="viewStudentDetails({{ student.id }})" 
+                                    class="text-blue-600 hover:text-blue-900 p-2 rounded-lg hover:bg-blue-50 transition-colors duration-200" 
+                                    title="Xem chi tiết">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <a href="/manager/students/{{ student.id }}/edit"
+                               class="text-orange-600 hover:text-orange-900 p-2 rounded-lg hover:bg-orange-50 transition-colors duration-200"
+                               title="Chỉnh sửa">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button onclick="deleteStudent({{ student.id }}, '{{ student.full_name }}')" 
+                                    class="text-red-600 hover:text-red-900 p-2 rounded-lg hover:bg-red-50 transition-colors duration-200" 
+                                    title="Xóa">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        {% if not students.items %}
+        <div class="text-center py-12">
+            <i class="fas fa-users text-gray-400 text-4xl mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Chưa có học sinh nào</h3>
+            <p class="text-gray-500 mb-4">Bắt đầu bằng cách thêm học sinh đầu tiên</p>
+            <a href="/manager/students/create"
+               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700">
+                <i class="fas fa-plus mr-2"></i>
+                Thêm học sinh
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if students.pages > 1 %}
+    <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+        <div class="flex items-center justify-between">
+            <div class="flex-1 flex justify-between sm:hidden">
+                {% if students.has_prev %}
+                <a href="{{ url_for('manager.students', page=students.prev_num) }}" 
+                   class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Trước
+                </a>
+                {% endif %}
+                {% if students.has_next %}
+                <a href="{{ url_for('manager.students', page=students.next_num) }}" 
+                   class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Sau
+                </a>
+                {% endif %}
+            </div>
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-sm text-gray-700">
+                        Hiển thị <span class="font-medium">{{ students.per_page * (students.page - 1) + 1 }}</span>
+                        đến <span class="font-medium">{{ students.per_page * students.page if students.page < students.pages else students.total }}</span>
+                        trong tổng số <span class="font-medium">{{ students.total }}</span> học sinh
+                    </p>
+                </div>
+                <div>
+                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                        {% for page_num in students.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != students.page %}
+                                <a href="{{ url_for('manager.students', page=page_num) }}" 
+                                   class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    {{ page_num }}
+                                </a>
+                                {% else %}
+                                <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-orange-50 text-sm font-medium text-orange-600">
+                                    {{ page_num }}
+                                </span>
+                                {% endif %}
+                            {% else %}
+                            <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                ...
+                            </span>
+                            {% endif %}
+                        {% endfor %}
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Student Details Modal -->
+<div id="studentDetailsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-96 overflow-y-auto">
+            <div class="flex justify-between items-center p-6 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Chi tiết học sinh</h3>
+                <button onclick="closeStudentDetailsModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="studentDetailsContent" class="p-6">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Search and filter functionality
+document.getElementById('searchInput').addEventListener('input', filterStudents);
+document.getElementById('classFilter').addEventListener('change', filterStudents);
+document.getElementById('statusFilter').addEventListener('change', filterStudents);
+document.getElementById('sortBy').addEventListener('change', sortStudents);
+
+function filterStudents() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const classFilter = document.getElementById('classFilter').value;
+    const statusFilter = document.getElementById('statusFilter').value;
+    const rows = document.querySelectorAll('.student-row');
+    
+    rows.forEach(row => {
+        const name = row.dataset.name;
+        const studentId = row.dataset.studentId;
+        const className = row.dataset.class;
+        const status = row.dataset.status;
+        
+        const matchesSearch = name.includes(searchTerm) || studentId.includes(searchTerm);
+        const matchesClass = !classFilter || className === classFilter;
+        const matchesStatus = !statusFilter || status === statusFilter;
+        
+        if (matchesSearch && matchesClass && matchesStatus) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+function sortStudents() {
+    const sortBy = document.getElementById('sortBy').value;
+    const tbody = document.getElementById('studentsTableBody');
+    const rows = Array.from(tbody.querySelectorAll('.student-row'));
+    
+    rows.sort((a, b) => {
+        let aVal, bVal;
+        
+        switch(sortBy) {
+            case 'name':
+                aVal = a.dataset.name;
+                bVal = b.dataset.name;
+                return aVal.localeCompare(bVal);
+            case 'class':
+                aVal = a.dataset.class;
+                bVal = b.dataset.class;
+                return aVal.localeCompare(bVal);
+            case 'attendance':
+                aVal = parseFloat(a.dataset.attendance);
+                bVal = parseFloat(b.dataset.attendance);
+                return bVal - aVal; // Descending
+            case 'created':
+                aVal = new Date(a.dataset.created);
+                bVal = new Date(b.dataset.created);
+                return bVal - aVal; // Descending
+        }
+    });
+    
+    rows.forEach(row => tbody.appendChild(row));
+}
+
+function viewStudentDetails(studentId) {
+    document.getElementById('studentDetailsModal').classList.remove('hidden');
+    document.getElementById('studentDetailsContent').innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin text-orange-500"></i> Đang tải...</div>';
+    
+    // Load student details via AJAX
+    fetch(`/manager/student/${studentId}/details`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('studentDetailsContent').innerHTML = `
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Họ tên:</label>
+                            <p class="text-sm text-gray-900">${data.full_name}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Mã học sinh:</label>
+                            <p class="text-sm text-gray-900">${data.student_code || 'Chưa có'}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Ngày sinh:</label>
+                            <p class="text-sm text-gray-900">${data.date_of_birth || 'Chưa cập nhật'}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Lớp học:</label>
+                            <p class="text-sm text-gray-900">${data.class_name || 'Chưa phân lớp'}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Phụ huynh:</label>
+                            <p class="text-sm text-gray-900">${data.parent_name || 'Chưa cập nhật'}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">SĐT phụ huynh:</label>
+                            <p class="text-sm text-gray-900">${data.parent_phone || 'Chưa cập nhật'}</p>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Địa chỉ:</label>
+                        <p class="text-sm text-gray-900">${data.address || 'Chưa cập nhật'}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Tỷ lệ điểm danh:</label>
+                        <p class="text-sm text-gray-900">${data.attendance_rate}%</p>
+                    </div>
+                </div>
+            `;
+        })
+        .catch(error => {
+            document.getElementById('studentDetailsContent').innerHTML = '<div class="text-center py-4 text-red-500"><i class="fas fa-exclamation-triangle"></i> Lỗi khi tải thông tin</div>';
+        });
+}
+
+function closeStudentDetailsModal() {
+    document.getElementById('studentDetailsModal').classList.add('hidden');
+}
+
+function deleteStudent(studentId, studentName) {
+    if (confirm(`Bạn có chắc chắn muốn xóa học sinh "${studentName}"?`)) {
+        fetch(`/manager/students/${studentId}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                notify.success('Xóa học sinh thành công!');
+                location.reload();
+            } else {
+                notify.error('Có lỗi xảy ra khi xóa học sinh');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            notify.error('Có lỗi xảy ra khi xóa học sinh');
+        });
+    }
+}
+
+function exportStudents() {
+    notify.info('Tính năng xuất Excel đang phát triển');
+}
+
+// Close modal when clicking outside
+document.getElementById('studentDetailsModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeStudentDetailsModal();
+    }
+});
+
+// Animation on load
+document.addEventListener('DOMContentLoaded', function() {
+    const rows = document.querySelectorAll('.student-row');
+    rows.forEach((row, index) => {
+        row.style.opacity = '0';
+        row.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            row.style.transition = 'all 0.3s ease-out';
+            row.style.opacity = '1';
+            row.style.transform = 'translateY(0)';
+        }, index * 50);
+    });
+});
+</script>
+{% endblock %}

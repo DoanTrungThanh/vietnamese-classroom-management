@@ -1,0 +1,199 @@
+{% extends "base_tailwind.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">{{ title }}</h1>
+                <p class="text-gray-600 mt-1">Chỉnh sửa thông tin phân công giảng dạy</p>
+            </div>
+            <a href="{{ url_for('manager.schedule_assignments') }}" 
+               class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Quay lại
+            </a>
+        </div>
+    </div>
+
+    <!-- Assignment Info -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <div class="flex items-start">
+            <i class="fas fa-info-circle text-blue-500 mt-0.5 mr-2"></i>
+            <div>
+                <h4 class="text-sm font-medium text-blue-800">Thông tin phân công hiện tại</h4>
+                <p class="text-sm text-blue-700 mt-1">
+                    <strong>Lớp:</strong> {{ assignment.class_obj.name }} | 
+                    <strong>Giáo viên:</strong> {{ assignment.teacher.full_name }} | 
+                    <strong>Thời gian:</strong> {{ assignment.day_name }} {{ assignment.time_range }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Form -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <form method="POST" class="space-y-6">
+            {{ form.hidden_tag() }}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Class Selection -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-chalkboard text-orange-500 mr-1"></i>
+                        Lớp học *
+                    </label>
+                    {{ form.class_id(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500") }}
+                    {% if form.class_id.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.class_id.errors[0] }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Teacher Selection -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-user-tie text-blue-500 mr-1"></i>
+                        Giáo viên *
+                    </label>
+                    {{ form.teacher_id(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500") }}
+                    {% if form.teacher_id.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.teacher_id.errors[0] }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Day of Week -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-calendar-day text-green-500 mr-1"></i>
+                        Thứ *
+                    </label>
+                    {{ form.day_of_week(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500") }}
+                    {% if form.day_of_week.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.day_of_week.errors[0] }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Session -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-sun text-yellow-500 mr-1"></i>
+                        Khung giờ *
+                    </label>
+                    {{ form.session(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500") }}
+                    {% if form.session.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.session.errors[0] }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Start Time -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-clock text-purple-500 mr-1"></i>
+                        Giờ bắt đầu *
+                    </label>
+                    {{ form.start_time(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500") }}
+                    {% if form.start_time.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.start_time.errors[0] }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- End Time -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-clock text-purple-500 mr-1"></i>
+                        Giờ kết thúc *
+                    </label>
+                    {{ form.end_time(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500") }}
+                    {% if form.end_time.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.end_time.errors[0] }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Subject -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-book text-indigo-500 mr-1"></i>
+                        Môn học
+                    </label>
+                    {{ form.subject(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500", placeholder="Nhập tên môn học") }}
+                    {% if form.subject.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.subject.errors[0] }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Room -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-door-open text-teal-500 mr-1"></i>
+                        Phòng học
+                    </label>
+                    {{ form.room(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500", placeholder="Nhập phòng học") }}
+                    {% if form.room.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.room.errors[0] }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+                <div class="text-sm text-gray-600">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Các trường có dấu (*) là bắt buộc
+                </div>
+                <div class="flex space-x-3">
+                    <a href="{{ url_for('manager.schedule_assignments') }}" 
+                       class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition-colors duration-200">
+                        <i class="fas fa-times mr-2"></i>
+                        Hủy
+                    </a>
+                    <button type="submit" 
+                            class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition-colors duration-200">
+                        <i class="fas fa-save mr-2"></i>
+                        Cập nhật
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    const form = document.querySelector('form');
+    const startTimeInput = document.querySelector('input[name="start_time"]');
+    const endTimeInput = document.querySelector('input[name="end_time"]');
+    
+    form.addEventListener('submit', function(e) {
+        const startTime = startTimeInput.value;
+        const endTime = endTimeInput.value;
+        
+        if (startTime && endTime && startTime >= endTime) {
+            e.preventDefault();
+            alert('Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc');
+            return false;
+        }
+    });
+    
+    // Auto-suggest time based on session
+    const sessionSelect = document.querySelector('select[name="session"]');
+    sessionSelect.addEventListener('change', function() {
+        const session = this.value;
+        
+        if (session === 'morning') {
+            if (!startTimeInput.value) startTimeInput.value = '07:30';
+            if (!endTimeInput.value) endTimeInput.value = '11:30';
+        } else if (session === 'afternoon') {
+            if (!startTimeInput.value) startTimeInput.value = '13:30';
+            if (!endTimeInput.value) endTimeInput.value = '17:30';
+        } else if (session === 'evening') {
+            if (!startTimeInput.value) startTimeInput.value = '18:30';
+            if (!endTimeInput.value) endTimeInput.value = '21:30';
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,257 @@
+{% extends "base_tailwind.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">
+            <i class="fas fa-exchange-alt text-blue-500 mr-2"></i>
+            Quản lý thu chi
+        </h1>
+        <div class="flex space-x-3">
+            <a href="{{ url_for('financial.dashboard') }}" 
+               class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition duration-200">
+                <i class="fas fa-arrow-left mr-2"></i>Quay lại
+            </a>
+            <a href="{{ url_for('financial.create_transaction') }}" 
+               class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-200">
+                <i class="fas fa-plus mr-2"></i>Thêm giao dịch
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <form method="GET" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Từ ngày</label>
+                <input type="date" name="start_date" value="{{ request.args.get('start_date', '') }}"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Đến ngày</label>
+                <input type="date" name="end_date" value="{{ request.args.get('end_date', '') }}"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Loại giao dịch</label>
+                <select name="transaction_type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Tất cả</option>
+                    <option value="income" {{ 'selected' if request.args.get('transaction_type') == 'income' }}>Khoản thu</option>
+                    <option value="expense" {{ 'selected' if request.args.get('transaction_type') == 'expense' }}>Khoản chi</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Danh mục</label>
+                <select name="category" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Tất cả</option>
+                    <option value="tuition" {{ 'selected' if request.args.get('category') == 'tuition' }}>Học phí</option>
+                    <option value="donation" {{ 'selected' if request.args.get('category') == 'donation' }}>Quyên góp</option>
+                    <option value="event" {{ 'selected' if request.args.get('category') == 'event' }}>Sự kiện</option>
+                    <option value="office_supplies" {{ 'selected' if request.args.get('category') == 'office_supplies' }}>Văn phòng phẩm</option>
+                    <option value="utilities" {{ 'selected' if request.args.get('category') == 'utilities' }}>Tiện ích</option>
+                    <option value="salary" {{ 'selected' if request.args.get('category') == 'salary' }}>Lương</option>
+                </select>
+            </div>
+            <div class="flex items-end">
+                <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-200">
+                    <i class="fas fa-search mr-2"></i>Lọc
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Search -->
+    <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+        <form method="GET" class="flex gap-4">
+            <input type="hidden" name="start_date" value="{{ request.args.get('start_date', '') }}">
+            <input type="hidden" name="end_date" value="{{ request.args.get('end_date', '') }}">
+            <input type="hidden" name="transaction_type" value="{{ request.args.get('transaction_type', '') }}">
+            <input type="hidden" name="category" value="{{ request.args.get('category', '') }}">
+            <div class="flex-1">
+                <input type="text" name="search" value="{{ search }}" placeholder="Tìm kiếm theo tiêu đề, mô tả, nhà cung cấp..."
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition duration-200">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+    </div>
+
+    <!-- Transactions Table -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        {% if transactions.items %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giao dịch</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loại</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Danh mục</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số tiền</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phương thức</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for transaction in transactions.items %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">{{ transaction.title }}</p>
+                                    {% if transaction.description %}
+                                        <p class="text-sm text-gray-500">{{ transaction.description[:50] }}{% if transaction.description|length > 50 %}...{% endif %}</p>
+                                    {% endif %}
+                                    {% if transaction.vendor_payer %}
+                                        <p class="text-xs text-gray-400">{{ transaction.vendor_payer }}</p>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                           bg-{{ 'green' if transaction.transaction_type == 'income' else 'red' }}-100 
+                                           text-{{ 'green' if transaction.transaction_type == 'income' else 'red' }}-800">
+                                    <i class="fas fa-{{ 'arrow-up' if transaction.transaction_type == 'income' else 'arrow-down' }} mr-1"></i>
+                                    {{ transaction.transaction_type_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ transaction.category }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium
+                                     text-{{ 'green' if transaction.transaction_type == 'income' else 'red' }}-600">
+                                {{ "{:,.0f}".format(transaction.amount) }} VNĐ
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ transaction.transaction_date.strftime('%d/%m/%Y') }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ transaction.payment_method_display }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                           bg-{{ 'green' if transaction.status == 'approved' else 'yellow' if transaction.status == 'pending' else 'red' }}-100 
+                                           text-{{ 'green' if transaction.status == 'approved' else 'yellow' if transaction.status == 'pending' else 'red' }}-800">
+                                    {{ transaction.status_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex space-x-2">
+                                    <button onclick="viewTransaction({{ transaction.id }})" 
+                                            class="text-blue-600 hover:text-blue-900">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button onclick="editTransaction({{ transaction.id }})" 
+                                            class="text-green-600 hover:text-green-900">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="deleteTransaction({{ transaction.id }})" 
+                                            class="text-red-600 hover:text-red-900">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if transactions.pages > 1 %}
+                <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                    <div class="flex-1 flex justify-between sm:hidden">
+                        {% if transactions.has_prev %}
+                            <a href="{{ url_for('financial.transactions', page=transactions.prev_num, **request.args) }}" 
+                               class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                Trước
+                            </a>
+                        {% endif %}
+                        {% if transactions.has_next %}
+                            <a href="{{ url_for('financial.transactions', page=transactions.next_num, **request.args) }}" 
+                               class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                Sau
+                            </a>
+                        {% endif %}
+                    </div>
+                    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                        <div>
+                            <p class="text-sm text-gray-700">
+                                Hiển thị <span class="font-medium">{{ transactions.per_page * (transactions.page - 1) + 1 }}</span>
+                                đến <span class="font-medium">{{ transactions.per_page * (transactions.page - 1) + transactions.items|length }}</span>
+                                trong <span class="font-medium">{{ transactions.total }}</span> kết quả
+                            </p>
+                        </div>
+                        <div>
+                            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                {% for page_num in transactions.iter_pages() %}
+                                    {% if page_num %}
+                                        {% if page_num != transactions.page %}
+                                            <a href="{{ url_for('financial.transactions', page=page_num, **request.args) }}" 
+                                               class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                                {{ page_num }}
+                                            </a>
+                                        {% else %}
+                                            <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600">
+                                                {{ page_num }}
+                                            </span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                            ...
+                                        </span>
+                                    {% endif %}
+                                {% endfor %}
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-12">
+                <i class="fas fa-exchange-alt text-gray-400 text-6xl mb-4"></i>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Chưa có giao dịch nào</h3>
+                <p class="text-gray-500 mb-6">Bắt đầu bằng cách thêm giao dịch đầu tiên</p>
+                <a href="{{ url_for('financial.create_transaction') }}" 
+                   class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg transition duration-200">
+                    <i class="fas fa-plus mr-2"></i>Thêm giao dịch
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function viewTransaction(id) {
+    // TODO: Implement view transaction modal
+    alert('Xem chi tiết giao dịch #' + id);
+}
+
+function editTransaction(id) {
+    // TODO: Implement edit transaction
+    window.location.href = '/financial/transaction/' + id + '/edit';
+}
+
+function deleteTransaction(id) {
+    if (confirm('Bạn có chắc chắn muốn xóa giao dịch này?')) {
+        fetch('/financial/transaction/' + id + '/delete', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Có lỗi xảy ra: ' + data.message);
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,225 @@
+{% extends "base_tailwind.html" %}
+
+{% block content %}
+<!-- Header -->
+<div class="bg-white rounded-lg shadow-md p-6 mb-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 flex items-center">
+                <i class="fas fa-plus text-orange-500 mr-3"></i>
+                Thêm chi tiêu mới
+            </h1>
+            <p class="text-gray-600 mt-1">Tạo bản ghi chi tiêu mới trong hệ thống</p>
+        </div>
+        
+        <div class="flex space-x-2">
+            <a href="{{ url_for('expense.expenses') }}" 
+               class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Quay lại
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Form -->
+<div class="bg-white rounded-lg shadow-md p-6">
+    <form method="POST" class="space-y-6">
+        {{ form.hidden_tag() }}
+        
+        <!-- Basic Information -->
+        <div class="border-b border-gray-200 pb-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Thông tin cơ bản</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-tag text-blue-500 mr-1"></i>
+                        Tiêu đề chi tiêu *
+                    </label>
+                    {{ form.title(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500", placeholder="Nhập tiêu đề chi tiêu") }}
+                    {% if form.title.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.title.errors[0] }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-money-bill-wave text-green-500 mr-1"></i>
+                        Số tiền *
+                    </label>
+                    {{ form.amount(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500", placeholder="0.00") }}
+                    {% if form.amount.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.amount.errors[0] }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-calendar text-purple-500 mr-1"></i>
+                        Ngày chi tiêu *
+                    </label>
+                    {{ form.expense_date(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500") }}
+                    {% if form.expense_date.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.expense_date.errors[0] }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-tags text-indigo-500 mr-1"></i>
+                        Danh mục *
+                    </label>
+                    {{ form.category_id(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500") }}
+                    {% if form.category_id.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.category_id.errors[0] }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-credit-card text-pink-500 mr-1"></i>
+                        Phương thức thanh toán *
+                    </label>
+                    {{ form.payment_method(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500") }}
+                    {% if form.payment_method.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.payment_method.errors[0] }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="mt-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-align-left text-gray-500 mr-1"></i>
+                    Mô tả chi tiết
+                </label>
+                {{ form.description(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500", rows="4", placeholder="Mô tả chi tiết về chi tiêu này...") }}
+                {% if form.description.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.description.errors[0] }}</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Additional Information -->
+        <div class="border-b border-gray-200 pb-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Thông tin bổ sung</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-receipt text-blue-500 mr-1"></i>
+                        Số hóa đơn
+                    </label>
+                    {{ form.receipt_number(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500", placeholder="Nhập số hóa đơn") }}
+                    {% if form.receipt_number.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.receipt_number.errors[0] }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-store text-green-500 mr-1"></i>
+                        Nhà cung cấp
+                    </label>
+                    {{ form.vendor(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500", placeholder="Tên nhà cung cấp") }}
+                    {% if form.vendor.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.vendor.errors[0] }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="mt-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-sticky-note text-yellow-500 mr-1"></i>
+                    Ghi chú
+                </label>
+                {{ form.notes(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500", rows="3", placeholder="Ghi chú thêm về chi tiêu...") }}
+                {% if form.notes.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.notes.errors[0] }}</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Submit Buttons -->
+        <div class="flex justify-end space-x-3 pt-6">
+            <a href="{{ url_for('expense.expenses') }}" 
+               class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                <i class="fas fa-times mr-2"></i>
+                Hủy
+            </a>
+            <button type="submit" 
+                    class="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors duration-200">
+                <i class="fas fa-save mr-2"></i>
+                Tạo chi tiêu
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Quick Tips -->
+<div class="bg-white rounded-lg shadow-md p-6 mt-6">
+    <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+        <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>
+        Lưu ý
+    </h3>
+    <ul class="space-y-2 text-sm text-gray-600">
+        <li class="flex items-start">
+            <i class="fas fa-check-circle text-green-500 mr-2 mt-0.5"></i>
+            <span>Nhập đầy đủ thông tin để dễ dàng theo dõi và quản lý</span>
+        </li>
+        <li class="flex items-start">
+            <i class="fas fa-check-circle text-green-500 mr-2 mt-0.5"></i>
+            <span>Số hóa đơn giúp đối chiếu với chứng từ gốc</span>
+        </li>
+        <li class="flex items-start">
+            <i class="fas fa-check-circle text-green-500 mr-2 mt-0.5"></i>
+            <span>{% if current_user.is_admin() %}Chi tiêu sẽ được duyệt tự động{% else %}Chi tiêu cần được admin duyệt trước khi có hiệu lực{% endif %}</span>
+        </li>
+        <li class="flex items-start">
+            <i class="fas fa-check-circle text-green-500 mr-2 mt-0.5"></i>
+            <span>Có thể chỉnh sửa chi tiêu sau khi tạo nếu chưa được duyệt</span>
+        </li>
+    </ul>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Format amount input
+    const amountInput = document.querySelector('input[name="amount"]');
+    if (amountInput) {
+        amountInput.addEventListener('input', function() {
+            let value = this.value.replace(/[^\d.]/g, '');
+            // Ensure only one decimal point
+            const parts = value.split('.');
+            if (parts.length > 2) {
+                value = parts[0] + '.' + parts.slice(1).join('');
+            }
+            this.value = value;
+        });
+        
+        amountInput.addEventListener('blur', function() {
+            if (this.value && !isNaN(this.value)) {
+                this.value = parseFloat(this.value).toFixed(2);
+            }
+        });
+    }
+    
+    // Auto-focus first input
+    const firstInput = document.querySelector('input[name="title"]');
+    if (firstInput) {
+        firstInput.focus();
+    }
+    
+    // Form validation
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const amount = document.querySelector('input[name="amount"]').value;
+        if (!amount || parseFloat(amount) <= 0) {
+            e.preventDefault();
+            alert('Vui lòng nhập số tiền hợp lệ');
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %}

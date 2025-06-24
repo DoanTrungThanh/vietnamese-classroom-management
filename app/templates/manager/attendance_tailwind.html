@@ -1,0 +1,217 @@
+{% extends "base_tailwind.html" %}
+
+{% block content %}
+<!-- Header -->
+<div class="bg-white rounded-lg shadow-md p-6 mb-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 flex items-center">
+                <i class="fas fa-chart-line text-orange-500 mr-3"></i>
+                Báo cáo điểm danh
+            </h1>
+            <p class="text-gray-600 mt-1">Tổng quan điểm danh ngày {{ filter_date.strftime('%d/%m/%Y') }}</p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-3">
+            <a href="{{ url_for('manager.students') }}" 
+               class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-center">
+                <i class="fas fa-users mr-2"></i>
+                Quản lý học sinh
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="bg-white rounded-lg shadow-md p-6 mb-6">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+        <i class="fas fa-filter text-orange-500 mr-2"></i>
+        Bộ lọc
+    </h3>
+    <form method="GET" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+            <label for="date" class="block text-sm font-medium text-gray-700 mb-2">Ngày</label>
+            <input type="date" id="date" name="date" value="{{ filter_date.strftime('%Y-%m-%d') }}"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+        </div>
+        <div>
+            <label for="class_id" class="block text-sm font-medium text-gray-700 mb-2">Lớp học</label>
+            <select id="class_id" name="class_id"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                <option value="">Tất cả lớp</option>
+                {% for class_obj in managed_classes %}
+                <option value="{{ class_obj.id }}" {% if class_filter == class_obj.id %}selected{% endif %}>
+                    {{ class_obj.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="flex items-end">
+            <button type="submit" 
+                    class="w-full bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors duration-200">
+                <i class="fas fa-search mr-2"></i>
+                Lọc
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Statistics -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-users text-blue-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Tổng học sinh</p>
+                <p class="text-2xl font-bold text-gray-900">{{ stats.total_students }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-user-check text-green-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Có mặt</p>
+                <p class="text-2xl font-bold text-gray-900">{{ stats.present_count }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-user-times text-red-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Vắng mặt</p>
+                <p class="text-2xl font-bold text-gray-900">{{ stats.absent_count }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-percentage text-orange-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Tỷ lệ có mặt</p>
+                <p class="text-2xl font-bold text-gray-900">{{ stats.attendance_rate }}%</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Attendance Details -->
+{% if attendance_by_class %}
+<div class="space-y-6">
+    {% for class_name, schedules in attendance_by_class.items() %}
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                <i class="fas fa-graduation-cap text-orange-500 mr-2"></i>
+                {{ class_name }}
+            </h3>
+        </div>
+        
+        {% for schedule_info, attendances in schedules.items() %}
+        <div class="p-6 border-b border-gray-100 last:border-b-0">
+            <h4 class="text-md font-medium text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-clock text-blue-500 mr-2"></i>
+                {{ schedule_info }}
+            </h4>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Học sinh
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Trạng thái
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Ghi chú
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Thời gian
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for attendance in attendances %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-8 w-8">
+                                        <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                            <span class="text-sm font-medium text-blue-600">
+                                                {{ attendance.student.full_name[0] }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="ml-3">
+                                        <div class="text-sm font-medium text-gray-900">{{ attendance.student.full_name }}</div>
+                                        <div class="text-sm text-gray-500">{{ attendance.student.student_code }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {% if attendance.status == 'present' %}bg-green-100 text-green-800
+                                    {% elif attendance.status == 'absent_with_reason' %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-red-100 text-red-800{% endif %}">
+                                    {% if attendance.status == 'present' %}
+                                        <i class="fas fa-check mr-1"></i>
+                                    {% elif attendance.status == 'absent_with_reason' %}
+                                        <i class="fas fa-exclamation mr-1"></i>
+                                    {% else %}
+                                        <i class="fas fa-times mr-1"></i>
+                                    {% endif %}
+                                    {{ attendance.status_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ attendance.reason or '-' }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ attendance.created_at.strftime('%H:%M') if attendance.created_at else '-' }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="bg-white rounded-lg shadow-md p-12 text-center">
+    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="fas fa-calendar-times text-gray-400 text-2xl"></i>
+    </div>
+    <h3 class="text-lg font-medium text-gray-900 mb-2">Chưa có dữ liệu điểm danh</h3>
+    <p class="text-gray-500 mb-6">Không có dữ liệu điểm danh cho ngày đã chọn.</p>
+    <a href="{{ url_for('manager.schedule') }}" 
+       class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition-colors duration-200">
+        <i class="fas fa-calendar-plus mr-2"></i>
+        Xem lịch dạy
+    </a>
+</div>
+{% endif %}
+{% endblock %}

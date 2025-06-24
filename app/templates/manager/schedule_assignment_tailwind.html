@@ -1,0 +1,388 @@
+{% extends "base_tailwind.html" %}
+
+{% block content %}
+<!-- Header -->
+<div class="bg-white rounded-lg shadow-md p-6 mb-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 flex items-center">
+                <i class="fas fa-user-clock text-orange-500 mr-3"></i>
+                Phân công lịch dạy
+            </h1>
+            <p class="text-gray-600 mt-1">Phân công giáo viên cho các lớp học và khung giờ</p>
+        </div>
+        
+        <div class="flex flex-wrap gap-2">
+            <button onclick="openAssignmentModal()" 
+                    class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center">
+                <i class="fas fa-plus mr-2"></i>
+                Phân công mới
+            </button>
+            <a href="{{ url_for('manager.schedule') }}" 
+               class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center">
+                <i class="fas fa-calendar-alt mr-2"></i>
+                Xem lịch dạy
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+    <div class="bg-white rounded-lg shadow-sm p-3 border-l-4 border-blue-500">
+        <div class="flex items-center">
+            <i class="fas fa-chalkboard-teacher text-blue-600 text-lg mr-2"></i>
+            <div>
+                <p class="text-xs text-gray-600">Phân công</p>
+                <p class="text-lg font-bold text-gray-900">{{ assignments|length }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm p-3 border-l-4 border-green-500">
+        <div class="flex items-center">
+            <i class="fas fa-user-check text-green-600 text-lg mr-2"></i>
+            <div>
+                <p class="text-xs text-gray-600">Giáo viên</p>
+                <p class="text-lg font-bold text-gray-900">{{ active_teachers }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm p-3 border-l-4 border-purple-500">
+        <div class="flex items-center">
+            <i class="fas fa-chalkboard text-purple-600 text-lg mr-2"></i>
+            <div>
+                <p class="text-xs text-gray-600">Lớp học</p>
+                <p class="text-lg font-bold text-gray-900">{{ assigned_classes }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm p-3 border-l-4 border-orange-500">
+        <div class="flex items-center">
+            <i class="fas fa-clock text-orange-600 text-lg mr-2"></i>
+            <div>
+                <p class="text-xs text-gray-600">Khung giờ</p>
+                <p class="text-lg font-bold text-gray-900">{{ used_time_slots }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Assignment Table -->
+<div class="bg-white rounded-lg shadow-md overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">Danh sách phân công</h3>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Giáo viên
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Lớp học
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Khung giờ
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Thứ trong tuần
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Trạng thái
+                    </th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Thao tác
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for assignment in assignments %}
+                <tr class="hover:bg-gray-50 transition-colors duration-200">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 h-10 w-10">
+                                <div class="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                                    <i class="fas fa-chalkboard-teacher text-green-600"></i>
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">{{ assignment.teacher.full_name }}</div>
+                                <div class="text-sm text-gray-500">{{ assignment.teacher.email }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">{{ assignment.class_obj.name }}</div>
+                        <div class="text-sm text-gray-500">{{ assignment.class_obj.student_count }} học sinh</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ assignment.session_name }}</div>
+                        <div class="text-sm text-gray-500">{{ assignment.start_time.strftime('%H:%M') }} - {{ assignment.end_time.strftime('%H:%M') }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {{ assignment.day_name }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if assignment.is_active %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <i class="fas fa-check-circle mr-1"></i>
+                            Hoạt động
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            <i class="fas fa-times-circle mr-1"></i>
+                            Tạm dừng
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div class="flex items-center justify-end space-x-2">
+                            <button onclick="editAssignment({{ assignment.id }})" 
+                                    class="text-orange-600 hover:text-orange-900 p-2 rounded-lg hover:bg-orange-50 transition-colors duration-200" 
+                                    title="Chỉnh sửa">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="toggleAssignment({{ assignment.id }}, {{ assignment.is_active|lower }})" 
+                                    class="text-{% if assignment.is_active %}yellow{% else %}green{% endif %}-600 hover:text-{% if assignment.is_active %}yellow{% else %}green{% endif %}-900 p-2 rounded-lg hover:bg-{% if assignment.is_active %}yellow{% else %}green{% endif %}-50 transition-colors duration-200" 
+                                    title="{% if assignment.is_active %}Tạm dừng{% else %}Kích hoạt{% endif %}">
+                                <i class="fas fa-{% if assignment.is_active %}pause{% else %}play{% endif %}"></i>
+                            </button>
+                            <button onclick="deleteAssignment({{ assignment.id }})" 
+                                    class="text-red-600 hover:text-red-900 p-2 rounded-lg hover:bg-red-50 transition-colors duration-200" 
+                                    title="Xóa">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        {% if not assignments %}
+        <div class="text-center py-12">
+            <i class="fas fa-user-clock text-gray-400 text-4xl mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Chưa có phân công nào</h3>
+            <p class="text-gray-500 mb-4">Bắt đầu bằng cách phân công giáo viên cho lớp học</p>
+            <button onclick="openAssignmentModal()" 
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700">
+                <i class="fas fa-plus mr-2"></i>
+                Phân công đầu tiên
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Assignment Modal -->
+<div id="assignmentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div class="flex justify-between items-center p-6 border-b border-gray-200">
+                <h3 id="assignmentModalTitle" class="text-lg font-semibold text-gray-900">Phân công lịch dạy</h3>
+                <button onclick="closeAssignmentModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <form id="assignmentForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Giáo viên *</label>
+                        <select name="teacher_id" required 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                            <option value="">Chọn giáo viên</option>
+                            {% for teacher in teachers %}
+                            <option value="{{ teacher.id }}">{{ teacher.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Lớp học *</label>
+                        <select name="class_id" required 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                            <option value="">Chọn lớp học</option>
+                            {% for class in classes %}
+                            <option value="{{ class.id }}">{{ class.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Buổi học *</label>
+                        <select name="session" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                            <option value="">Chọn buổi học</option>
+                            <option value="morning">Buổi sáng</option>
+                            <option value="afternoon">Buổi chiều</option>
+                            <option value="evening">Buổi tối</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Thời gian bắt đầu *</label>
+                        <input type="time" name="start_time" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Thời gian kết thúc *</label>
+                        <input type="time" name="end_time" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Thứ trong tuần *</label>
+                        <select name="day_of_week" required 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                            <option value="">Chọn thứ</option>
+                            <option value="1">Thứ 2</option>
+                            <option value="2">Thứ 3</option>
+                            <option value="3">Thứ 4</option>
+                            <option value="4">Thứ 5</option>
+                            <option value="5">Thứ 6</option>
+                            <option value="6">Thứ 7</option>
+                            <option value="0">Chủ nhật</option>
+                        </select>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button type="button" onclick="closeAssignmentModal()" 
+                                class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                            Hủy
+                        </button>
+                        <button type="submit" 
+                                class="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors duration-200">
+                            <i class="fas fa-save mr-2"></i>
+                            Lưu
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openAssignmentModal() {
+    document.getElementById('assignmentModalTitle').textContent = 'Phân công lịch dạy';
+    document.getElementById('assignmentModal').classList.remove('hidden');
+    
+    // Reset form
+    document.getElementById('assignmentForm').reset();
+    
+    // Set form action for create
+    document.getElementById('assignmentForm').onsubmit = function(e) {
+        e.preventDefault();
+        submitAssignmentForm('/manager/schedule/assign');
+    };
+}
+
+function submitAssignmentForm(url) {
+    const form = document.getElementById('assignmentForm');
+    const formData = new FormData(form);
+    const submitButton = form.querySelector('button[type="submit"]');
+    const originalText = submitButton.innerHTML;
+    
+    // Show loading state
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang lưu...';
+    
+    fetch(url, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            notify.success(data.message);
+            closeAssignmentModal();
+            location.reload();
+        } else {
+            notify.error(data.message || 'Có lỗi xảy ra');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        notify.error('Có lỗi xảy ra khi lưu phân công');
+    })
+    .finally(() => {
+        // Restore button state
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalText;
+    });
+}
+
+function editAssignment(assignmentId) {
+    window.location.href = `/manager/schedule/assignment/${assignmentId}/edit`;
+}
+
+function toggleAssignment(assignmentId, isActive) {
+    const action = isActive ? 'tạm dừng' : 'kích hoạt';
+    
+    if (confirm(`Bạn có chắc chắn muốn ${action} phân công này?`)) {
+        fetch(`/manager/schedule/assignment/${assignmentId}/toggle`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                notify.success(data.message);
+                location.reload();
+            } else {
+                notify.error(data.message || 'Có lỗi xảy ra');
+            }
+        })
+        .catch(error => {
+            notify.error('Có lỗi xảy ra khi cập nhật phân công');
+        });
+    }
+}
+
+function deleteAssignment(assignmentId) {
+    if (confirm('Bạn có chắc chắn muốn xóa phân công này?')) {
+        fetch(`/manager/schedule/assignment/${assignmentId}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                notify.success(data.message);
+                location.reload();
+            } else {
+                notify.error(data.message || 'Có lỗi xảy ra');
+            }
+        })
+        .catch(error => {
+            notify.error('Có lỗi xảy ra khi xóa phân công');
+        });
+    }
+}
+
+function closeAssignmentModal() {
+    document.getElementById('assignmentModal').classList.add('hidden');
+}
+
+// Close modal when clicking outside
+document.getElementById('assignmentModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeAssignmentModal();
+    }
+});
+</script>
+{% endblock %}

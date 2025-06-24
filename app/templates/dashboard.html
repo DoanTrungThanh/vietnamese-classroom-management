@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2>
+            <i class="fas fa-tachometer-alt"></i> Dashboard
+            <small class="text-muted">- {{ current_user.full_name }} ({{ current_user.role|title }})</small>
+        </h2>
+        <hr>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    {% if current_user.is_admin() %}
+    <div class="col-md-3 mb-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats.total_classes }}</h4>
+                        <p class="mb-0">Lớp học</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-chalkboard fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats.total_students }}</h4>
+                        <p class="mb-0">Học sinh</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-user-graduate fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats.total_teachers }}</h4>
+                        <p class="mb-0">Giáo viên</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-chalkboard-teacher fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats.total_managers }}</h4>
+                        <p class="mb-0">Quản sinh</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-users-cog fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% elif current_user.is_manager() %}
+    <div class="col-md-6 mb-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats.managed_classes }}</h4>
+                        <p class="mb-0">Lớp được quản lý</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-chalkboard fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats.total_students }}</h4>
+                        <p class="mb-0">Học sinh</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-user-graduate fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% elif current_user.is_teacher() %}
+    <div class="col-md-6 mb-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats.teaching_classes }}</h4>
+                        <p class="mb-0">Lớp giảng dạy</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-chalkboard fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats.weekly_sessions }}</h4>
+                        <p class="mb-0">Buổi/tuần</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-calendar-alt fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-bolt"></i> Thao tác nhanh</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% if current_user.is_admin() %}
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('admin.create_user') }}" class="btn btn-outline-primary btn-block">
+                            <i class="fas fa-user-plus"></i> Tạo người dùng
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('admin.create_class') }}" class="btn btn-outline-success btn-block">
+                            <i class="fas fa-plus"></i> Tạo lớp học
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    {% if current_user.is_admin() or current_user.is_manager() %}
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('manager.create_student') }}" class="btn btn-outline-info btn-block">
+                            <i class="fas fa-user-graduate"></i> Thêm học sinh
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('manager.schedule') }}" class="btn btn-outline-warning btn-block">
+                            <i class="fas fa-calendar-alt"></i> Xem lịch dạy
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    {% if current_user.is_teacher() %}
+                    <div class="col-md-6 mb-2">
+                        <a href="{{ url_for('teacher.schedule') }}" class="btn btn-outline-primary btn-block">
+                            <i class="fas fa-calendar-alt"></i> Lịch dạy của tôi
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Today's Schedule for Teachers -->
+{% if current_user.is_teacher() and today_schedules %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-calendar-day"></i> Lịch dạy hôm nay</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for schedule in today_schedules %}
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card border-primary">
+                            <div class="card-body">
+                                <h6 class="card-title text-primary">
+                                    <i class="fas fa-chalkboard"></i> {{ schedule.class_obj.name }}
+                                </h6>
+                                <p class="card-text">
+                                    <strong>{{ schedule.session_name }}:</strong> {{ schedule.time_range }}<br>
+                                    {% if schedule.subject %}<strong>Môn:</strong> {{ schedule.subject }}<br>{% endif %}
+                                    {% if schedule.room %}<strong>Phòng:</strong> {{ schedule.room }}<br>{% endif %}
+                                    <strong>Sĩ số:</strong> {{ schedule.class_obj.student_count }} HS
+                                </p>
+                                <a href="{{ url_for('teacher.attendance', schedule_id=schedule.id) }}"
+                                   class="btn btn-primary btn-sm">
+                                    <i class="fas fa-user-check"></i> Điểm danh
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Recent Events -->
+{% if recent_events %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-calendar-check"></i> Sự kiện gần đây</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% for event in recent_events %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ event.name }}</h6>
+                            <small>{{ event.start_datetime.strftime('%d/%m/%Y %H:%M') }}</small>
+                        </div>
+                        <p class="mb-1">{{ event.description[:100] }}{% if event.description|length > 100 %}...{% endif %}</p>
+                        <small><i class="fas fa-map-marker-alt"></i> {{ event.location }}</small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

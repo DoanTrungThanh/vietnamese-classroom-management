@@ -1,0 +1,342 @@
+{% extends "base_tailwind.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">
+            <i class="fas fa-share text-green-500 mr-2"></i>
+            Phân phối tài sản quyên góp
+        </h1>
+        <a href="{{ url_for('financial.donations') }}" 
+           class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition duration-200">
+            <i class="fas fa-arrow-left mr-2"></i>Quay lại
+        </a>
+    </div>
+
+    <!-- Asset Information -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">
+            <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+            Thông tin tài sản
+        </h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <label class="block text-sm font-medium text-gray-600 mb-1">Tên tài sản</label>
+                <p class="text-lg font-semibold text-gray-900">{{ donation.asset_name }}</p>
+            </div>
+            
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <label class="block text-sm font-medium text-gray-600 mb-1">Danh mục</label>
+                <p class="text-lg font-semibold text-gray-900">{{ donation.category }}</p>
+            </div>
+            
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <label class="block text-sm font-medium text-gray-600 mb-1">Số lượng</label>
+                <p class="text-lg font-semibold text-gray-900">{{ donation.quantity }}</p>
+            </div>
+            
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <label class="block text-sm font-medium text-gray-600 mb-1">Tình trạng</label>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium
+                           bg-{{ 'green' if donation.condition == 'new' else 'blue' if donation.condition == 'good' else 'yellow' if donation.condition == 'fair' else 'red' }}-100 
+                           text-{{ 'green' if donation.condition == 'new' else 'blue' if donation.condition == 'good' else 'yellow' if donation.condition == 'fair' else 'red' }}-800">
+                    {{ donation.condition_display }}
+                </span>
+            </div>
+            
+            {% if donation.estimated_value %}
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <label class="block text-sm font-medium text-gray-600 mb-1">Giá trị ước tính</label>
+                <p class="text-lg font-semibold text-green-600">{{ "{:,.0f}".format(donation.estimated_value) }} VNĐ</p>
+            </div>
+            {% endif %}
+            
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <label class="block text-sm font-medium text-gray-600 mb-1">Người quyên góp</label>
+                <p class="text-lg font-semibold text-gray-900">{{ donation.donor_name or 'Ẩn danh' }}</p>
+            </div>
+        </div>
+        
+        {% if donation.description %}
+        <div class="mt-4">
+            <label class="block text-sm font-medium text-gray-600 mb-1">Mô tả</label>
+            <p class="text-gray-700 bg-gray-50 p-3 rounded-lg">{{ donation.description }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Distribution Form -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">
+            <i class="fas fa-hand-holding text-green-500 mr-2"></i>
+            Thông tin phân phối
+        </h3>
+        
+        <form method="POST" class="space-y-6">
+            {{ form.hidden_tag() }}
+            
+            <!-- Distribution Type Selection -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-3">Loại phân phối</label>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="relative">
+                        <input type="radio" id="individual" name="distribution_type" value="individual" class="sr-only" checked>
+                        <label for="individual" class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-green-300 transition-colors">
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 border-2 border-gray-300 rounded-full mr-3 flex items-center justify-center">
+                                    <div class="w-2 h-2 bg-green-500 rounded-full hidden"></div>
+                                </div>
+                                <div>
+                                    <i class="fas fa-user text-blue-500 mr-2"></i>
+                                    <span class="font-medium">Cá nhân</span>
+                                    <p class="text-sm text-gray-500">Phân phối cho học sinh cụ thể</p>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <div class="relative">
+                        <input type="radio" id="class" name="distribution_type" value="class" class="sr-only">
+                        <label for="class" class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-green-300 transition-colors">
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 border-2 border-gray-300 rounded-full mr-3 flex items-center justify-center">
+                                    <div class="w-2 h-2 bg-green-500 rounded-full hidden"></div>
+                                </div>
+                                <div>
+                                    <i class="fas fa-users text-purple-500 mr-2"></i>
+                                    <span class="font-medium">Lớp học</span>
+                                    <p class="text-sm text-gray-500">Phân phối cho cả lớp</p>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <div class="relative">
+                        <input type="radio" id="other" name="distribution_type" value="other" class="sr-only">
+                        <label for="other" class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-green-300 transition-colors">
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 border-2 border-gray-300 rounded-full mr-3 flex items-center justify-center">
+                                    <div class="w-2 h-2 bg-green-500 rounded-full hidden"></div>
+                                </div>
+                                <div>
+                                    <i class="fas fa-ellipsis-h text-orange-500 mr-2"></i>
+                                    <span class="font-medium">Khác</span>
+                                    <p class="text-sm text-gray-500">Phân phối cho đối tượng khác</p>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recipient Selection -->
+            <div id="recipientSection">
+                <!-- Individual Selection -->
+                <div id="individualSection" class="distribution-section">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-user-graduate text-blue-500 mr-1"></i>
+                        Chọn học sinh
+                    </label>
+                    <select id="studentSelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                        <option value="">Chọn học sinh...</option>
+                        <!-- Students will be loaded via AJAX -->
+                    </select>
+                </div>
+
+                <!-- Class Selection -->
+                <div id="classSection" class="distribution-section hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-chalkboard text-purple-500 mr-1"></i>
+                        Chọn lớp học
+                    </label>
+                    <select id="classSelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                        <option value="">Chọn lớp học...</option>
+                        <!-- Classes will be loaded via AJAX -->
+                    </select>
+                </div>
+
+                <!-- Other Recipient -->
+                <div id="otherSection" class="distribution-section hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-edit text-orange-500 mr-1"></i>
+                        Người/Tổ chức nhận
+                    </label>
+                    <input type="text" id="otherRecipient" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" placeholder="Nhập tên người/tổ chức nhận">
+                </div>
+            </div>
+
+            <!-- Final Recipient Field (Hidden, will be populated by JS) -->
+            {{ form.distributed_to(class="hidden", id="finalRecipient") }}
+
+            <!-- Distribution Date -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-calendar text-green-500 mr-1"></i>
+                    {{ form.distributed_date.label.text }} *
+                </label>
+                {{ form.distributed_date(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500") }}
+                {% if form.distributed_date.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.distributed_date.errors[0] }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Distribution Notes -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-sticky-note text-yellow-500 mr-1"></i>
+                    {{ form.distribution_notes.label.text }}
+                </label>
+                {{ form.distribution_notes(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500", rows="3", placeholder="Ghi chú về việc phân phối tài sản") }}
+                {% if form.distribution_notes.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.distribution_notes.errors[0] }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                <a href="{{ url_for('financial.donations') }}" 
+                   class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition duration-200">
+                    Hủy
+                </a>
+                {{ form.submit(class="px-6 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition duration-200", id="submitBtn", disabled=True) }}
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const distributionTypes = document.querySelectorAll('input[name="distribution_type"]');
+    const sections = {
+        individual: document.getElementById('individualSection'),
+        class: document.getElementById('classSection'),
+        other: document.getElementById('otherSection')
+    };
+    const selects = {
+        student: document.getElementById('studentSelect'),
+        class: document.getElementById('classSelect'),
+        other: document.getElementById('otherRecipient')
+    };
+    const finalRecipient = document.getElementById('finalRecipient');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Load students and classes
+    loadStudents();
+    loadClasses();
+
+    // Handle distribution type change
+    distributionTypes.forEach(radio => {
+        radio.addEventListener('change', function() {
+            // Update radio button visual state
+            distributionTypes.forEach(r => {
+                const dot = r.parentElement.querySelector('.w-2.h-2');
+                const border = r.parentElement.querySelector('.w-4.h-4');
+                if (r.checked) {
+                    dot.classList.remove('hidden');
+                    border.classList.add('border-green-500');
+                    border.classList.remove('border-gray-300');
+                } else {
+                    dot.classList.add('hidden');
+                    border.classList.remove('border-green-500');
+                    border.classList.add('border-gray-300');
+                }
+            });
+
+            // Show/hide sections
+            Object.keys(sections).forEach(key => {
+                if (key === this.value) {
+                    sections[key].classList.remove('hidden');
+                } else {
+                    sections[key].classList.add('hidden');
+                }
+            });
+
+            // Reset selections
+            Object.values(selects).forEach(select => {
+                if (select.tagName === 'SELECT') {
+                    select.selectedIndex = 0;
+                } else {
+                    select.value = '';
+                }
+            });
+            finalRecipient.value = '';
+            updateSubmitButton();
+        });
+    });
+
+    // Handle recipient selection
+    selects.student.addEventListener('change', updateRecipient);
+    selects.class.addEventListener('change', updateRecipient);
+    selects.other.addEventListener('input', updateRecipient);
+
+    function updateRecipient() {
+        const activeType = document.querySelector('input[name="distribution_type"]:checked').value;
+        let recipient = '';
+
+        switch(activeType) {
+            case 'individual':
+                const studentOption = selects.student.options[selects.student.selectedIndex];
+                if (studentOption.value) {
+                    recipient = `Học sinh: ${studentOption.text}`;
+                }
+                break;
+            case 'class':
+                const classOption = selects.class.options[selects.class.selectedIndex];
+                if (classOption.value) {
+                    recipient = `Lớp: ${classOption.text}`;
+                }
+                break;
+            case 'other':
+                recipient = selects.other.value.trim();
+                break;
+        }
+
+        finalRecipient.value = recipient;
+        updateSubmitButton();
+    }
+
+    function updateSubmitButton() {
+        submitBtn.disabled = !finalRecipient.value;
+        if (finalRecipient.value) {
+            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        } else {
+            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+    }
+
+    function loadStudents() {
+        fetch('/api/students')
+            .then(response => response.json())
+            .then(students => {
+                students.forEach(student => {
+                    const option = document.createElement('option');
+                    option.value = student.id;
+                    option.textContent = `${student.full_name} (${student.student_code})`;
+                    selects.student.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error loading students:', error));
+    }
+
+    function loadClasses() {
+        fetch('/api/classes')
+            .then(response => response.json())
+            .then(classes => {
+                classes.forEach(cls => {
+                    const option = document.createElement('option');
+                    option.value = cls.id;
+                    option.textContent = `${cls.name} - ${cls.subject}`;
+                    selects.class.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error loading classes:', error));
+    }
+
+    // Initialize first radio button
+    distributionTypes[0].checked = true;
+    distributionTypes[0].dispatchEvent(new Event('change'));
+});
+</script>
+{% endblock %}

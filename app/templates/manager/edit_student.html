@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-user-edit"></i> Chỉnh sửa học sinh</h2>
+            <a href="{{ url_for('manager.students') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </a>
+        </div>
+        <hr>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-user"></i> {{ student.full_name }} ({{ student.student_code }})</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" class="needs-validation" novalidate>
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.student_code.label(class="form-label") }}
+                            {{ form.student_code(class="form-control") }}
+                            {% for error in form.student_code.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                            <div class="form-text">Mã học sinh duy nhất</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.full_name.label(class="form-label") }}
+                            {{ form.full_name(class="form-control") }}
+                            {% for error in form.full_name.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.date_of_birth.label(class="form-label") }}
+                            {{ form.date_of_birth(class="form-control") }}
+                            {% for error in form.date_of_birth.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.class_id.label(class="form-label") }}
+                            {{ form.class_id(class="form-select") }}
+                            {% for error in form.class_id.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.address.label(class="form-label") }}
+                        {{ form.address(class="form-control", rows="3") }}
+                        {% for error in form.address.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.parent_name.label(class="form-label") }}
+                            {{ form.parent_name(class="form-control") }}
+                            {% for error in form.parent_name.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.parent_phone.label(class="form-label") }}
+                            {{ form.parent_phone(class="form-control") }}
+                            {% for error in form.parent_phone.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.profile_url.label(class="form-label") }}
+                        {{ form.profile_url(class="form-control") }}
+                        {% for error in form.profile_url.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                        <div class="form-text">
+                            <i class="fas fa-info-circle"></i> 
+                            Đường dẫn đến hồ sơ học sinh trên Google Drive hoặc hệ thống nội bộ
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        {{ form.submit(class="btn btn-primary btn-lg") }}
+                        <a href="{{ url_for('manager.students') }}" class="btn btn-secondary btn-lg">Hủy</a>
+                        <button type="button" class="btn btn-danger btn-lg" onclick="confirmDelete()">
+                            <i class="fas fa-trash"></i> Xóa học sinh
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete confirmation form -->
+<form id="deleteForm" method="POST" action="{{ url_for('manager.delete_student', student_id=student.id) }}" style="display: none;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function confirmDelete() {
+    if (confirm('Bạn có chắc chắn muốn xóa học sinh {{ student.full_name }}?\n\nHành động này không thể hoàn tác.')) {
+        document.getElementById('deleteForm').submit();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Format phone number
+    var phoneInput = document.querySelector('input[name="parent_phone"]');
+    phoneInput.addEventListener('input', function() {
+        var value = this.value.replace(/\D/g, '');
+        if (value.length > 0) {
+            if (value.length <= 10) {
+                this.value = value.replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3');
+            }
+        }
+    });
+    
+    // Validate profile URL
+    var urlInput = document.querySelector('input[name="profile_url"]');
+    urlInput.addEventListener('blur', function() {
+        var url = this.value;
+        if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+            this.value = 'https://' + url;
+        }
+    });
+});
+</script>
+{% endblock %}

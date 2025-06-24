@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-plus"></i> Tạo lớp học mới</h2>
+            <a href="{{ url_for('admin.classes') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </a>
+        </div>
+        <hr>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" class="needs-validation" novalidate>
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.name.label(class="form-label") }}
+                            {{ form.name(class="form-control", placeholder="Ví dụ: 10A1") }}
+                            {% for error in form.name.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                            <div class="form-text">Tên lớp học (ví dụ: 10A1, 11B2)</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.block_name.label(class="form-label") }}
+                            {{ form.block_name(class="form-control", placeholder="Ví dụ: Khối 10") }}
+                            {% for error in form.block_name.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                            <div class="form-text">Khối lớp (ví dụ: Khối 10, Khối 11)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.manager_id.label(class="form-label") }}
+                        {{ form.manager_id(class="form-select") }}
+                        {% for error in form.manager_id.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                        <div class="form-text">Chọn quản sinh phụ trách lớp học này</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control", rows="4", placeholder="Mô tả về lớp học...") }}
+                        {% for error in form.description.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                        <div class="form-text">Mô tả chi tiết về lớp học (tùy chọn)</div>
+                    </div>
+                    
+                    <div class="text-center">
+                        {{ form.submit(class="btn btn-primary btn-lg") }}
+                        <a href="{{ url_for('admin.classes') }}" class="btn btn-secondary btn-lg">Hủy</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <h6><i class="fas fa-info-circle"></i> Hướng dẫn tạo lớp học:</h6>
+            <ul class="mb-0">
+                <li><strong>Tên lớp:</strong> Nhập tên lớp theo quy ước của trường (ví dụ: 10A1, 11B2)</li>
+                <li><strong>Khối lớp:</strong> Nhập tên khối để nhóm các lớp cùng cấp</li>
+                <li><strong>Quản sinh:</strong> Chọn quản sinh sẽ phụ trách quản lý lớp này</li>
+                <li><strong>Mô tả:</strong> Thêm thông tin chi tiết về lớp (chuyên ngành, đặc điểm...)</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-generate block name based on class name
+    var nameInput = document.querySelector('input[name="name"]');
+    var blockInput = document.querySelector('input[name="block_name"]');
+    
+    nameInput.addEventListener('input', function() {
+        var className = this.value;
+        var match = className.match(/^(\d+)/);
+        if (match) {
+            var grade = match[1];
+            blockInput.value = 'Khối ' + grade;
+        }
+    });
+});
+</script>
+{% endblock %}

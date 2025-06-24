@@ -1,0 +1,318 @@
+{% extends "base_tailwind.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">
+                <i class="fas fa-copy text-blue-500 mr-2"></i>
+                Sao chép lịch dạy
+            </h1>
+            <p class="text-gray-600 mt-1">Sao chép lịch dạy từ tuần này sang tuần khác một cách trực quan</p>
+        </div>
+        
+        <a href="{{ url_for('manager.schedule') }}" 
+           class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition duration-200">
+            <i class="fas fa-arrow-left mr-2"></i>Quay lại
+        </a>
+    </div>
+
+    <!-- Visual Flow -->
+    <div class="bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 rounded-lg p-6 mb-6">
+        <div class="flex items-center justify-center space-x-8">
+            <!-- Source Week -->
+            <div class="text-center">
+                <div class="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center mb-3 shadow-lg">
+                    <i class="fas fa-calendar-alt text-white text-3xl"></i>
+                </div>
+                <h3 class="font-bold text-blue-700 text-lg">Tuần nguồn</h3>
+                <p class="text-sm text-blue-600">Lịch hiện có</p>
+                <div id="sourceWeekDisplay" class="mt-2 px-3 py-1 bg-blue-100 rounded-full text-xs text-blue-700">
+                    Chưa chọn
+                </div>
+            </div>
+            
+            <!-- Arrow Animation -->
+            <div class="flex items-center">
+                <div class="w-16 h-1 bg-gradient-to-r from-blue-400 to-green-400 rounded"></div>
+                <div class="mx-4 animate-pulse">
+                    <i class="fas fa-arrow-right text-green-500 text-3xl"></i>
+                </div>
+                <div class="w-16 h-1 bg-gradient-to-r from-blue-400 to-green-400 rounded"></div>
+            </div>
+            
+            <!-- Target Week -->
+            <div class="text-center">
+                <div class="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mb-3 shadow-lg">
+                    <i class="fas fa-calendar-plus text-white text-3xl"></i>
+                </div>
+                <h3 class="font-bold text-green-700 text-lg">Tuần đích</h3>
+                <p class="text-sm text-green-600">Lịch mới</p>
+                <div id="targetWeekDisplay" class="mt-2 px-3 py-1 bg-green-100 rounded-full text-xs text-green-700">
+                    Chưa chọn
+                </div>
+            </div>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="mt-6">
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div id="progressBar" class="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+            <p id="progressText" class="text-center text-sm text-gray-600 mt-2">Chọn tuần nguồn để bắt đầu</p>
+        </div>
+    </div>
+
+    <!-- Copy Form -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <form method="POST" class="space-y-6">
+            {{ form.hidden_tag() }}
+            
+            <!-- Week Selection -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-calendar-week text-blue-500 mr-1"></i>
+                        {{ form.source_week.label.text }} *
+                    </label>
+                    {{ form.source_week(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500", id="sourceWeek") }}
+                    {% if form.source_week.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.source_week.errors[0] }}</p>
+                    {% endif %}
+                    
+                    <!-- Source Preview -->
+                    <div id="sourcePreview" class="hidden mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <h4 class="font-semibold text-blue-800 mb-2">
+                            <i class="fas fa-eye mr-1"></i>Xem trước lịch nguồn
+                        </h4>
+                        <div id="sourceSchedules" class="space-y-2"></div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-calendar-plus text-green-500 mr-1"></i>
+                        {{ form.target_week.label.text }} *
+                    </label>
+                    {{ form.target_week(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500", id="targetWeek") }}
+                    {% if form.target_week.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.target_week.errors[0] }}</p>
+                    {% endif %}
+                    
+                    <!-- Target Preview -->
+                    <div id="targetPreview" class="hidden mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                        <h4 class="font-semibold text-green-800 mb-2">
+                            <i class="fas fa-calendar-check mr-1"></i>Lịch đích hiện tại
+                        </h4>
+                        <div id="targetSchedules" class="space-y-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Copy Options -->
+            <div class="border-t border-gray-200 pt-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                    <i class="fas fa-cog text-purple-500 mr-2"></i>
+                    Tùy chọn sao chép
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.copy_all.label.text }} *
+                        </label>
+                        {{ form.copy_all(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500", id="copyType") }}
+                    </div>
+
+                    <div id="classSelection" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.class_id.label.text }}
+                        </label>
+                        {{ form.class_id(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500") }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary -->
+            <div id="copySummary" class="hidden border-t border-gray-200 pt-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                    <i class="fas fa-clipboard-list text-orange-500 mr-2"></i>
+                    Tóm tắt sao chép
+                </h3>
+                <div id="summaryContent" class="bg-orange-50 rounded-lg p-4 border border-orange-200">
+                    <!-- Summary will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                <a href="{{ url_for('manager.schedule') }}" 
+                   class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition duration-200">
+                    Hủy
+                </a>
+                {{ form.submit(class="px-6 py-2 bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 text-white rounded-lg transition duration-200", id="submitBtn", disabled=True) }}
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sourceWeek = document.getElementById('sourceWeek');
+    const targetWeek = document.getElementById('targetWeek');
+    const copyType = document.getElementById('copyType');
+    const classSelection = document.getElementById('classSelection');
+    const submitBtn = document.getElementById('submitBtn');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const sourceWeekDisplay = document.getElementById('sourceWeekDisplay');
+    const targetWeekDisplay = document.getElementById('targetWeekDisplay');
+    const sourcePreview = document.getElementById('sourcePreview');
+    const targetPreview = document.getElementById('targetPreview');
+    const copySummary = document.getElementById('copySummary');
+    
+    let sourceSchedules = [];
+    let targetSchedules = [];
+    
+    // Update progress
+    function updateProgress() {
+        let progress = 0;
+        let text = 'Chọn tuần nguồn để bắt đầu';
+        
+        if (sourceWeek.value) {
+            progress = 33;
+            text = 'Đã chọn tuần nguồn. Chọn tuần đích.';
+            sourceWeekDisplay.textContent = getWeekDisplayText(sourceWeek.value);
+        }
+        
+        if (sourceWeek.value && targetWeek.value) {
+            progress = 66;
+            text = 'Đã chọn cả hai tuần. Kiểm tra tùy chọn.';
+            targetWeekDisplay.textContent = getWeekDisplayText(targetWeek.value);
+        }
+        
+        if (sourceWeek.value && targetWeek.value && copyType.value) {
+            progress = 100;
+            text = 'Sẵn sàng sao chép!';
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            copySummary.classList.remove('hidden');
+            updateSummary();
+        } else {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            copySummary.classList.add('hidden');
+        }
+        
+        progressBar.style.width = progress + '%';
+        progressText.textContent = text;
+    }
+    
+    function getWeekDisplayText(weekValue) {
+        if (!weekValue) return 'Chưa chọn';
+        const option = document.querySelector(`option[value="${weekValue}"]`);
+        return option ? option.textContent.substring(0, 20) + '...' : weekValue;
+    }
+    
+    function updateSummary() {
+        const summaryContent = document.getElementById('summaryContent');
+        const copyTypeText = copyType.options[copyType.selectedIndex].text;
+        const sourceText = getWeekDisplayText(sourceWeek.value);
+        const targetText = getWeekDisplayText(targetWeek.value);
+        
+        summaryContent.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <h5 class="font-semibold text-orange-700">Từ tuần:</h5>
+                    <p class="text-sm text-gray-700">${sourceText}</p>
+                    <p class="text-xs text-gray-500">${sourceSchedules.length} lịch dạy</p>
+                </div>
+                <div>
+                    <h5 class="font-semibold text-orange-700">Sang tuần:</h5>
+                    <p class="text-sm text-gray-700">${targetText}</p>
+                    <p class="text-xs text-gray-500">${targetSchedules.length} lịch hiện có</p>
+                </div>
+                <div>
+                    <h5 class="font-semibold text-orange-700">Loại sao chép:</h5>
+                    <p class="text-sm text-gray-700">${copyTypeText}</p>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Event listeners
+    sourceWeek.addEventListener('change', function() {
+        updateProgress();
+        if (this.value) {
+            loadSchedulePreview(this.value, 'source');
+        }
+    });
+    
+    targetWeek.addEventListener('change', function() {
+        updateProgress();
+        if (this.value) {
+            loadSchedulePreview(this.value, 'target');
+        }
+    });
+    
+    copyType.addEventListener('change', function() {
+        if (this.value === 'class') {
+            classSelection.classList.remove('hidden');
+        } else {
+            classSelection.classList.add('hidden');
+        }
+        updateProgress();
+    });
+    
+    function loadSchedulePreview(week, type) {
+        fetch(`/api/schedules/preview?week=${week}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (type === 'source') {
+                        sourceSchedules = data.schedules;
+                        showSchedulePreview(data.schedules, 'sourceSchedules', 'sourcePreview');
+                    } else {
+                        targetSchedules = data.schedules;
+                        showSchedulePreview(data.schedules, 'targetSchedules', 'targetPreview');
+                    }
+                    updateSummary();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+    
+    function showSchedulePreview(schedules, containerId, previewId) {
+        const container = document.getElementById(containerId);
+        const preview = document.getElementById(previewId);
+        
+        if (schedules.length === 0) {
+            container.innerHTML = '<p class="text-gray-500 text-sm">Không có lịch dạy nào</p>';
+        } else {
+            container.innerHTML = schedules.map(schedule => `
+                <div class="flex items-center justify-between p-2 bg-white rounded border">
+                    <div>
+                        <span class="font-medium text-sm">${schedule.class_name}</span>
+                        <span class="text-xs text-gray-500 ml-2">${schedule.teacher_name}</span>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        ${getDayName(schedule.day_of_week)} ${schedule.start_time}-${schedule.end_time}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        preview.classList.remove('hidden');
+    }
+    
+    function getDayName(dayNum) {
+        const days = ['', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+        return days[dayNum] || dayNum;
+    }
+    
+    // Initialize
+    updateProgress();
+});
+</script>
+{% endblock %}

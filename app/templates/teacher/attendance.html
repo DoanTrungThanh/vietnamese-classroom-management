@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2>
+            <i class="fas fa-user-check"></i> Điểm danh
+            <small class="text-muted">- {{ schedule.class_obj.name }} ({{ schedule.class_obj.block_name }})</small>
+        </h2>
+        <hr>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h6><i class="fas fa-info-circle"></i> Thông tin tiết học</h6>
+                <p><strong>Lớp:</strong> {{ schedule.class_obj.name }} - {{ schedule.class_obj.block_name }}</p>
+                <p><strong>Giáo viên:</strong> {{ schedule.teacher.full_name }}</p>
+                <p><strong>Thời gian:</strong> {{ schedule.day_name }}, {{ schedule.time_range }}</p>
+                {% if schedule.subject %}<p><strong>Môn học:</strong> {{ schedule.subject }}</p>{% endif %}
+                {% if schedule.room %}<p><strong>Phòng:</strong> {{ schedule.room }}</p>{% endif %}
+                <p><strong>Sĩ số:</strong> {{ students|length }} học sinh</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h6><i class="fas fa-calendar-day"></i> Ngày điểm danh</h6>
+                <input type="date" id="attendanceDate" class="form-control" value="{{ today.strftime('%Y-%m-%d') }}">
+                <div class="mt-2">
+                    <small class="text-muted">Chọn ngày để xem/chỉnh sửa điểm danh</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-list-check"></i> Danh sách điểm danh</h5>
+            </div>
+            <div class="card-body">
+                <form id="attendanceForm">
+                    <input type="hidden" name="schedule_id" value="{{ schedule.id }}">
+                    <input type="hidden" name="date" value="{{ today.strftime('%Y-%m-%d') }}">
+                    
+                    <div class="table-responsive">
+                        <table class="table table-striped attendance-table">
+                            <thead>
+                                <tr>
+                                    <th width="5%">STT</th>
+                                    <th width="15%">Mã HS</th>
+                                    <th width="25%">Họ và tên</th>
+                                    <th width="20%">Trạng thái</th>
+                                    <th width="35%">Lý do (nếu vắng)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr class="student-row" data-student-id="{{ student.id }}">
+                                    <td>{{ loop.index }}</td>
+                                    <td>{{ student.student_code }}</td>
+                                    <td>{{ student.full_name }}</td>
+                                    <td>
+                                        <select class="form-select attendance-status" onchange="toggleAbsenceReason(this)">
+                                            <option value="present" 
+                                                {% if student.id in existing_attendance and existing_attendance[student.id].status == 'present' %}selected{% endif %}>
+                                                Có mặt
+                                            </option>
+                                            <option value="absent_with_reason"
+                                                {% if student.id in existing_attendance and existing_attendance[student.id].status == 'absent_with_reason' %}selected{% endif %}>
+                                                Vắng có lý do
+                                            </option>
+                                            <option value="absent_without_reason"
+                                                {% if student.id in existing_attendance and existing_attendance[student.id].status == 'absent_without_reason' %}selected{% endif %}>
+                                                Vắng không lý do
+                                            </option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control absence-reason" 
+                                               placeholder="Nhập lý do vắng mặt..."
+                                               value="{% if student.id in existing_attendance %}{{ existing_attendance[student.id].reason or '' }}{% endif %}"
+                                               style="display: {% if student.id in existing_attendance and existing_attendance[student.id].status != 'present' %}block{% else %}none{% endif %}">
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="lessonContent" class="form-label">
+                                    <i class="fas fa-book"></i> Nội dung bài giảng
+                                </label>
+                                <textarea class="form-control" id="lessonContent" name="lesson_content" rows="4"
+                                          placeholder="Nhập nội dung bài giảng...">{% if existing_attendance %}{{ existing_attendance[students[0].id].lesson_content if students and students[0].id in existing_attendance else '' }}{% endif %}</textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">
+                                    <i class="fas fa-sticky-note"></i> Ghi chú
+                                </label>
+                                <textarea class="form-control" id="notes" name="notes" rows="4"
+                                          placeholder="Ghi chú thêm...">{% if existing_attendance %}{{ existing_attendance[students[0].id].notes if students and students[0].id in existing_attendance else '' }}{% endif %}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button type="button" class="btn btn-primary btn-lg" id="saveAttendanceBtn" 
+                                onclick="saveAttendance({{ schedule.id }})">
+                            <i class="fas fa-save"></i> Lưu điểm danh
+                        </button>
+                        <a href="{{ url_for('teacher.schedule') }}" class="btn btn-secondary btn-lg">
+                            <i class="fas fa-arrow-left"></i> Quay lại
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Update form date when date input changes
+document.getElementById('attendanceDate').addEventListener('change', function() {
+    document.querySelector('input[name="date"]').value = this.value;
+    // You could also reload the page with the new date to show existing attendance
+    window.location.href = '{{ url_for("teacher.attendance", schedule_id=schedule.id) }}?date=' + this.value;
+});
+
+// Initialize absence reason visibility on page load
+document.addEventListener('DOMContentLoaded', function() {
+    var statusSelects = document.querySelectorAll('.attendance-status');
+    statusSelects.forEach(function(select) {
+        toggleAbsenceReason(select);
+    });
+});
+</script>
+{% endblock %}

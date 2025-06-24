@@ -1,0 +1,285 @@
+{% extends "base_tailwind.html" %}
+
+{% block content %}
+<!-- Header -->
+<div class="bg-white rounded-lg shadow-md p-6 mb-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 flex items-center">
+                <i class="fas fa-copy text-orange-500 mr-3"></i>
+                Sao chép lịch dạy
+            </h1>
+            <p class="text-gray-600 mt-1">Sao chép lịch dạy từ tuần này sang tuần khác</p>
+        </div>
+        
+        <div class="flex space-x-2">
+            <a href="{{ url_for('manager.schedule') }}" 
+               class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Quay lại
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Copy Form -->
+<div class="bg-white rounded-lg shadow-md p-6 mb-6">
+    <form id="copyScheduleForm" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Source Week -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-calendar-week text-blue-500 mr-1"></i>
+                    Tuần nguồn *
+                </label>
+                <input type="week" name="source_week" required
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                       value="{{ current_week }}">
+                <p class="mt-1 text-sm text-gray-500">Chọn tuần muốn sao chép lịch dạy</p>
+            </div>
+            
+            <!-- Target Week -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-calendar-plus text-green-500 mr-1"></i>
+                    Tuần đích *
+                </label>
+                <input type="week" name="target_week" required
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                <p class="mt-1 text-sm text-gray-500">Chọn tuần muốn dán lịch dạy</p>
+            </div>
+        </div>
+        
+        <!-- Copy Options -->
+        <div class="border-t border-gray-200 pt-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Tùy chọn sao chép</h3>
+            <div class="space-y-3">
+                <div class="flex items-center">
+                    <input type="checkbox" name="copy_all" id="copy_all" checked
+                           class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded">
+                    <label for="copy_all" class="ml-2 block text-sm text-gray-900">
+                        Sao chép tất cả lịch dạy trong tuần
+                    </label>
+                </div>
+                
+                <div class="flex items-center">
+                    <input type="checkbox" name="overwrite" id="overwrite"
+                           class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded">
+                    <label for="overwrite" class="ml-2 block text-sm text-gray-900">
+                        Ghi đè lịch dạy đã tồn tại (nếu có)
+                    </label>
+                </div>
+                
+                <div class="flex items-center">
+                    <input type="checkbox" name="copy_notes" id="copy_notes" checked
+                           class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded">
+                    <label for="copy_notes" class="ml-2 block text-sm text-gray-900">
+                        Sao chép ghi chú và nội dung bài học
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Specific Days Selection -->
+        <div class="border-t border-gray-200 pt-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Chọn ngày cụ thể (tùy chọn)</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div class="flex items-center">
+                    <input type="checkbox" name="days" value="1" id="day_1"
+                           class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded">
+                    <label for="day_1" class="ml-2 block text-sm text-gray-900">Thứ 2</label>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" name="days" value="2" id="day_2"
+                           class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded">
+                    <label for="day_2" class="ml-2 block text-sm text-gray-900">Thứ 3</label>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" name="days" value="3" id="day_3"
+                           class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded">
+                    <label for="day_3" class="ml-2 block text-sm text-gray-900">Thứ 4</label>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" name="days" value="4" id="day_4"
+                           class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded">
+                    <label for="day_4" class="ml-2 block text-sm text-gray-900">Thứ 5</label>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" name="days" value="5" id="day_5"
+                           class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded">
+                    <label for="day_5" class="ml-2 block text-sm text-gray-900">Thứ 6</label>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" name="days" value="6" id="day_6"
+                           class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded">
+                    <label for="day_6" class="ml-2 block text-sm text-gray-900">Thứ 7</label>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" name="days" value="0" id="day_0"
+                           class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded">
+                    <label for="day_0" class="ml-2 block text-sm text-gray-900">Chủ nhật</label>
+                </div>
+            </div>
+            <p class="mt-2 text-sm text-gray-500">Để trống để sao chép tất cả các ngày</p>
+        </div>
+        
+        <!-- Submit Buttons -->
+        <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+            <a href="{{ url_for('manager.schedule') }}" 
+               class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                <i class="fas fa-times mr-2"></i>
+                Hủy
+            </a>
+            <button type="submit" 
+                    class="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors duration-200">
+                <i class="fas fa-copy mr-2"></i>
+                Sao chép lịch dạy
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Preview Section -->
+<div id="previewSection" class="bg-white rounded-lg shadow-md p-6 hidden">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+        <i class="fas fa-eye text-blue-500 mr-2"></i>
+        Xem trước lịch dạy sẽ được sao chép
+    </h3>
+    <div id="previewContent">
+        <!-- Preview content will be loaded here -->
+    </div>
+</div>
+
+<!-- Guidelines -->
+<div class="bg-white rounded-lg shadow-md p-6">
+    <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+        <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+        Hướng dẫn sử dụng
+    </h3>
+    <ul class="space-y-2 text-sm text-gray-600">
+        <li class="flex items-start">
+            <i class="fas fa-check-circle text-green-500 mr-2 mt-0.5"></i>
+            <span>Chọn tuần nguồn có lịch dạy muốn sao chép</span>
+        </li>
+        <li class="flex items-start">
+            <i class="fas fa-check-circle text-green-500 mr-2 mt-0.5"></i>
+            <span>Chọn tuần đích muốn dán lịch dạy vào</span>
+        </li>
+        <li class="flex items-start">
+            <i class="fas fa-check-circle text-green-500 mr-2 mt-0.5"></i>
+            <span>Có thể chọn sao chép toàn bộ tuần hoặc chỉ một số ngày cụ thể</span>
+        </li>
+        <li class="flex items-start">
+            <i class="fas fa-check-circle text-green-500 mr-2 mt-0.5"></i>
+            <span>Tùy chọn ghi đè sẽ thay thế lịch dạy đã tồn tại</span>
+        </li>
+        <li class="flex items-start">
+            <i class="fas fa-exclamation-triangle text-yellow-500 mr-2 mt-0.5"></i>
+            <span>Kiểm tra kỹ trước khi sao chép để tránh xung đột lịch dạy</span>
+        </li>
+    </ul>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('copyScheduleForm');
+    const copyAllCheckbox = document.getElementById('copy_all');
+    const dayCheckboxes = document.querySelectorAll('input[name="days"]');
+    const sourceWeekInput = document.querySelector('input[name="source_week"]');
+    
+    // Handle copy all checkbox
+    copyAllCheckbox.addEventListener('change', function() {
+        dayCheckboxes.forEach(checkbox => {
+            checkbox.disabled = this.checked;
+            if (this.checked) {
+                checkbox.checked = false;
+            }
+        });
+    });
+    
+    // Handle individual day checkboxes
+    dayCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const anyDayChecked = Array.from(dayCheckboxes).some(cb => cb.checked);
+            if (anyDayChecked) {
+                copyAllCheckbox.checked = false;
+            }
+        });
+    });
+    
+    // Preview functionality
+    sourceWeekInput.addEventListener('change', function() {
+        loadPreview();
+    });
+    
+    function loadPreview() {
+        const sourceWeek = sourceWeekInput.value;
+        if (!sourceWeek) return;
+        
+        const previewSection = document.getElementById('previewSection');
+        const previewContent = document.getElementById('previewContent');
+        
+        previewSection.classList.remove('hidden');
+        previewContent.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin text-orange-500"></i> Đang tải...</div>';
+        
+        fetch(`/manager/schedule/preview?week=${sourceWeek}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    previewContent.innerHTML = data.html;
+                } else {
+                    previewContent.innerHTML = '<div class="text-center py-4 text-gray-500">Không có lịch dạy nào trong tuần này</div>';
+                }
+            })
+            .catch(error => {
+                previewContent.innerHTML = '<div class="text-center py-4 text-red-500">Lỗi khi tải xem trước</div>';
+            });
+    }
+    
+    // Form submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(form);
+        const submitButton = form.querySelector('button[type="submit"]');
+        const originalText = submitButton.innerHTML;
+        
+        // Show loading state
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang sao chép...';
+        
+        fetch('/manager/schedule/copy', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                notify.success(data.message);
+                setTimeout(() => {
+                    window.location.href = '/manager/schedule';
+                }, 1500);
+            } else {
+                notify.error(data.message || 'Có lỗi xảy ra khi sao chép lịch dạy');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            notify.error('Có lỗi xảy ra khi sao chép lịch dạy');
+        })
+        .finally(() => {
+            // Restore button state
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalText;
+        });
+    });
+    
+    // Load initial preview
+    if (sourceWeekInput.value) {
+        loadPreview();
+    }
+});
+</script>
+{% endblock %}
