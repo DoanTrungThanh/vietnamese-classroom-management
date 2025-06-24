@@ -23,23 +23,22 @@ def make_shell_context():
     }
 
 if __name__ == '__main__':
-    # Check if database exists, if not create it
+    # Production configuration for Render
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+
+    # Initialize database
     with app.app_context():
-        if not os.path.exists('app.db'):
+        try:
             db.create_all()
-            print("Database created successfully!")
-        else:
-            print("Database already exists.")
+            print("Database initialized successfully!")
+        except Exception as e:
+            print(f"Database initialization: {e}")
 
-    print("Starting Classroom Management System...")
-    print("Access the application at: http://127.0.0.1:8000")
-    print("\nLogin credentials:")
-    print("Admin: admin / admin123")
-    print("Manager 1: manager1 / manager123")
-    print("Manager 2: manager2 / manager123")
-    print("Teacher 1: teacher1 / teacher123")
-    print("Teacher 2: teacher2 / teacher123")
-    print("Teacher 3: teacher3 / teacher123")
-    print("\nPress Ctrl+C to stop the server")
+    print("Starting Vietnamese Classroom Management System...")
+    print(f"Server running on port: {port}")
+    print("\nDefault login credentials:")
+    print("Username: admin")
+    print("Password: admin123")
 
-    app.run(debug=True, host='0.0.0.0', port=8000)
+    app.run(debug=debug, host='0.0.0.0', port=port)
