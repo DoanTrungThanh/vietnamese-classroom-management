@@ -44,13 +44,10 @@ def create_user():
                 email=form.email.data,
                 full_name=form.full_name.data,
                 phone=form.phone.data,
-                date_of_birth=form.date_of_birth.data,
-                address=form.address.data,
                 role=form.role.data,
-                is_active=form.is_active.data,
-                password_hash=generate_password_hash(form.password.data),
-                created_at=datetime.utcnow()
+                is_active=form.is_active.data
             )
+            user.set_password(form.password.data)
             db.session.add(user)
             db.session.commit()
             flash(f'Tạo người dùng {user.full_name} thành công!', 'success')
@@ -74,14 +71,12 @@ def edit_user(id):
             user.email = form.email.data
             user.full_name = form.full_name.data
             user.phone = form.phone.data
-            user.date_of_birth = form.date_of_birth.data
-            user.address = form.address.data
             user.role = form.role.data
             user.is_active = form.is_active.data
 
             # Update password if provided
             if form.password.data:
-                user.password_hash = generate_password_hash(form.password.data)
+                user.set_password(form.password.data)
 
             db.session.commit()
             flash(f'Cập nhật người dùng {user.full_name} thành công!', 'success')
@@ -96,8 +91,6 @@ def edit_user(id):
         form.email.data = user.email
         form.full_name.data = user.full_name
         form.phone.data = user.phone
-        form.date_of_birth.data = getattr(user, 'date_of_birth', None)
-        form.address.data = getattr(user, 'address', '')
         form.role.data = user.role
         form.is_active.data = user.is_active
 
@@ -155,7 +148,7 @@ def user_details(id):
         'phone': user.phone or 'Chưa cập nhật',
         'role_display': role_display,
         'is_active': user.is_active,
-        'address': getattr(user, 'address', '') or 'Chưa cập nhật',
+        'phone_display': user.phone or 'Chưa cập nhật',
         'created_at': user.created_at.strftime('%d/%m/%Y %H:%M') if user.created_at else 'Không có thông tin'
     })
 

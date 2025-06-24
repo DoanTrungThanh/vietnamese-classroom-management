@@ -8,46 +8,39 @@ class CreateUserForm(FlaskForm):
         DataRequired(message='Vui lòng nhập họ và tên'),
         Length(min=2, max=100, message='Họ và tên phải từ 2-100 ký tự')
     ])
-    
+
     username = StringField('Tên đăng nhập', validators=[
         DataRequired(message='Vui lòng nhập tên đăng nhập'),
         Length(min=3, max=50, message='Tên đăng nhập phải từ 3-50 ký tự')
     ])
-    
+
     email = StringField('Email', validators=[
         DataRequired(message='Vui lòng nhập email'),
         Email(message='Email không hợp lệ'),
         Length(max=120, message='Email không được quá 120 ký tự')
     ])
-    
+
     phone = StringField('Số điện thoại', validators=[
         Optional(),
         Length(max=20, message='Số điện thoại không được quá 20 ký tự')
     ])
-    
-    date_of_birth = DateField('Ngày sinh', validators=[Optional()])
-    
-    address = TextAreaField('Địa chỉ', validators=[
-        Optional(),
-        Length(max=500, message='Địa chỉ không được quá 500 ký tự')
-    ])
-    
+
     role = SelectField('Vai trò', choices=[
         ('admin', 'Quản trị viên'),
         ('manager', 'Quản sinh'),
         ('teacher', 'Giáo viên')
     ], validators=[DataRequired(message='Vui lòng chọn vai trò')])
-    
+
     password = PasswordField('Mật khẩu', validators=[
         DataRequired(message='Vui lòng nhập mật khẩu'),
         Length(min=8, message='Mật khẩu phải có ít nhất 8 ký tự')
     ])
-    
+
     password_confirm = PasswordField('Xác nhận mật khẩu', validators=[
         DataRequired(message='Vui lòng xác nhận mật khẩu'),
         EqualTo('password', message='Mật khẩu không khớp')
     ])
-    
+
     is_active = BooleanField('Kích hoạt tài khoản', default=True)
     
     def validate_username(self, username):
@@ -65,45 +58,38 @@ class EditUserForm(FlaskForm):
         DataRequired(message='Vui lòng nhập họ và tên'),
         Length(min=2, max=100, message='Họ và tên phải từ 2-100 ký tự')
     ])
-    
+
     username = StringField('Tên đăng nhập', validators=[
         DataRequired(message='Vui lòng nhập tên đăng nhập'),
         Length(min=3, max=50, message='Tên đăng nhập phải từ 3-50 ký tự')
     ])
-    
+
     email = StringField('Email', validators=[
         DataRequired(message='Vui lòng nhập email'),
         Email(message='Email không hợp lệ'),
         Length(max=120, message='Email không được quá 120 ký tự')
     ])
-    
+
     phone = StringField('Số điện thoại', validators=[
         Optional(),
         Length(max=20, message='Số điện thoại không được quá 20 ký tự')
     ])
-    
-    date_of_birth = DateField('Ngày sinh', validators=[Optional()])
-    
-    address = TextAreaField('Địa chỉ', validators=[
-        Optional(),
-        Length(max=500, message='Địa chỉ không được quá 500 ký tự')
-    ])
-    
+
     role = SelectField('Vai trò', choices=[
         ('admin', 'Quản trị viên'),
         ('manager', 'Quản sinh'),
         ('teacher', 'Giáo viên')
     ], validators=[DataRequired(message='Vui lòng chọn vai trò')])
-    
+
     password = PasswordField('Mật khẩu mới', validators=[
         Optional(),
         Length(min=8, message='Mật khẩu phải có ít nhất 8 ký tự')
     ])
-    
+
     password_confirm = PasswordField('Xác nhận mật khẩu mới', validators=[
         EqualTo('password', message='Mật khẩu không khớp')
     ])
-    
+
     is_active = BooleanField('Kích hoạt tài khoản')
     
     def __init__(self, user, *args, **kwargs):
