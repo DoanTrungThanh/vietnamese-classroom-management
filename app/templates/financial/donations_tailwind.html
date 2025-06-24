@@ -8,14 +8,18 @@
             <i class="fas fa-hands-helping text-green-500 mr-2"></i>
             Quản lý tài sản quyên góp
         </h1>
-        <div class="flex space-x-3">
-            <a href="{{ url_for('financial.dashboard') }}" 
+        <div class="flex flex-wrap gap-3">
+            <a href="{{ url_for('financial.dashboard') }}"
                class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition duration-200">
                 <i class="fas fa-arrow-left mr-2"></i>Quay lại
             </a>
-            <a href="{{ url_for('financial.create_donation') }}" 
+            <a href="{{ url_for('financial.create_donation') }}"
                class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition duration-200">
                 <i class="fas fa-plus mr-2"></i>Nhận quyên góp
+            </a>
+            <a href="{{ url_for('financial.export_donations', **request.args) }}"
+               class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-200">
+                <i class="fas fa-file-excel mr-2"></i>Xuất Excel
             </a>
         </div>
     </div>

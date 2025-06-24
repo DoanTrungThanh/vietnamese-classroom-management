@@ -2,31 +2,90 @@ import io
 import pandas as pd
 from flask import make_response
 from datetime import datetime
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.utils.dataframe import dataframe_to_rows
+import urllib.parse
 
 def create_excel_response(data, filename, sheet_name='Sheet1'):
     """
-    Create Excel file response from data
+    Create Excel file response from data with UTF-8 encoding and .xlsx format
     """
     try:
         # Create Excel file in memory
         output = io.BytesIO()
-        
-        # Create DataFrame
+
+        # Create DataFrame with UTF-8 encoding
         df = pd.DataFrame(data)
-        
-        # Write to Excel
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, sheet_name=sheet_name, index=False)
-        
+
+        # Create workbook and worksheet
+        wb = Workbook()
+        ws = wb.active
+        ws.title = sheet_name
+
+        # Add data to worksheet
+        for r in dataframe_to_rows(df, index=False, header=True):
+            ws.append(r)
+
+        # Style the header row
+        header_font = Font(bold=True, color="FFFFFF")
+        header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+        header_alignment = Alignment(horizontal="center", vertical="center")
+
+        # Apply header styling
+        for cell in ws[1]:
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = header_alignment
+
+        # Auto-adjust column widths
+        for column in ws.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = min(max_length + 2, 50)  # Max width 50
+            ws.column_dimensions[column_letter].width = adjusted_width
+
+        # Add borders to all cells
+        thin_border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
+
+        for row in ws.iter_rows():
+            for cell in row:
+                cell.border = thin_border
+                if cell.row > 1:  # Data rows
+                    cell.alignment = Alignment(horizontal="left", vertical="center")
+
+        # Save to BytesIO with UTF-8 encoding
+        wb.save(output)
         output.seek(0)
-        
-        # Create response
+
+        # Ensure filename is UTF-8 encoded and properly formatted
+        if not filename.endswith('.xlsx'):
+            filename = filename.replace('.xls', '.xlsx')
+            if not filename.endswith('.xlsx'):
+                filename += '.xlsx'
+
+        # URL encode filename for proper UTF-8 handling
+        encoded_filename = urllib.parse.quote(filename.encode('utf-8'))
+
+        # Create response with proper headers for UTF-8 and .xlsx
         response = make_response(output.getvalue())
         response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        response.headers['Content-Disposition'] = f'attachment; filename={filename}'
-        
+        response.headers['Content-Disposition'] = f'attachment; filename*=UTF-8\'\'{encoded_filename}'
+        response.headers['Cache-Control'] = 'no-cache'
+
         return response
-        
+
     except Exception as e:
         print(f"Error creating Excel file: {str(e)}")
         return None
@@ -204,3 +263,90 @@ def export_time_slots_to_excel(time_slots):
     
     filename = f'khung_gio_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
     return create_excel_response(data, filename, 'Khung giờ')
+
+def export_financial_transactions_to_excel(transactions):
+    """
+    Export financial transactions data to Excel
+    """
+    data = []
+    for transaction in transactions:
+        data.append({
+            'ID': transaction.id,
+            'Loại giao dịch': 'Thu' if transaction.type == 'income' else 'Chi',
+            'Số tiền (VNĐ)': f"{transaction.amount:,.0f}",
+            'Mô tả': transaction.description or '',
+            'Danh mục': transaction.category or '',
+            'Lớp học': transaction.class_obj.name if transaction.class_obj else '',
+            'Sự kiện': transaction.event.title if transaction.event else '',
+            'Ngày giao dịch': transaction.transaction_date.strftime('%d/%m/%Y'),
+            'Người tạo': transaction.creator.full_name if transaction.creator else '',
+            'Ngày tạo': transaction.created_at.strftime('%d/%m/%Y %H:%M') if transaction.created_at else ''
+        })
+
+    filename = f'giao_dich_tai_chinh_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+    return create_excel_response(data, filename, 'Giao dịch tài chính')
+
+def export_donations_to_excel(donations):
+    """
+    Export donations data to Excel
+    """
+    data = []
+    for donation in donations:
+        data.append({
+            'ID': donation.id,
+            'Tên tài sản': donation.asset_name,
+            'Người quyên góp': donation.donor_name or 'Ẩn danh',
+            'SĐT người quyên góp': donation.donor_phone or '',
+            'Email người quyên góp': donation.donor_email or '',
+            'Số lượng': donation.quantity,
+            'Đơn vị': donation.unit or 'cái',
+            'Tình trạng': donation.condition or '',
+            'Giá trị ước tính (VNĐ)': f"{donation.estimated_value:,.0f}" if donation.estimated_value else '',
+            'Trạng thái': {
+                'received': 'Đã nhận',
+                'distributed': 'Đã phân phối',
+                'damaged': 'Hư hỏng',
+                'lost': 'Mất'
+            }.get(donation.status, donation.status),
+            'Ngày quyên góp': donation.donation_date.strftime('%d/%m/%Y'),
+            'Người nhận phân phối': donation.recipient_name or '',
+            'Loại phân phối': {
+                'individual': 'Cá nhân',
+                'class': 'Lớp học',
+                'other': 'Khác'
+            }.get(donation.recipient_type, donation.recipient_type) if donation.recipient_type else '',
+            'Ngày phân phối': donation.distribution_date.strftime('%d/%m/%Y') if donation.distribution_date else '',
+            'Ghi chú phân phối': donation.distribution_notes or '',
+            'Người tạo': donation.creator.full_name if donation.creator else '',
+            'Ngày tạo': donation.created_at.strftime('%d/%m/%Y %H:%M') if donation.created_at else ''
+        })
+
+    filename = f'tai_san_quyen_gop_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+    return create_excel_response(data, filename, 'Tài sản quyên góp')
+
+def export_events_to_excel(events):
+    """
+    Export events data to Excel
+    """
+    data = []
+    for event in events:
+        data.append({
+            'ID': event.id,
+            'Tiêu đề': event.title,
+            'Mô tả': event.description or '',
+            'Ngày bắt đầu': event.start_date.strftime('%d/%m/%Y %H:%M'),
+            'Ngày kết thúc': event.end_date.strftime('%d/%m/%Y %H:%M') if event.end_date else '',
+            'Địa điểm': event.location or '',
+            'Loại sự kiện': event.event_type or '',
+            'Trạng thái': {
+                'planned': 'Đã lên kế hoạch',
+                'ongoing': 'Đang diễn ra',
+                'completed': 'Đã hoàn thành',
+                'cancelled': 'Đã hủy'
+            }.get(event.status, event.status),
+            'Người tạo': event.creator.full_name if event.creator else '',
+            'Ngày tạo': event.created_at.strftime('%d/%m/%Y %H:%M') if event.created_at else ''
+        })
+
+    filename = f'su_kien_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+    return create_excel_response(data, filename, 'Sự kiện')

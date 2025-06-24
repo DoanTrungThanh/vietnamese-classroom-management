@@ -311,29 +311,86 @@ function searchTable(inputId, tableId) {
     });
 }
 
-// Export table to CSV
+// Export table to CSV with UTF-8 encoding
 function exportTableToCSV(tableId, filename) {
     var table = document.getElementById(tableId);
     var csv = [];
     var rows = table.querySelectorAll('tr');
-    
+
     for (var i = 0; i < rows.length; i++) {
         var row = [];
         var cols = rows[i].querySelectorAll('td, th');
-        
+
         for (var j = 0; j < cols.length; j++) {
-            row.push(cols[j].textContent.trim());
+            var cellText = cols[j].textContent.trim();
+            // Escape quotes and wrap in quotes if contains comma
+            if (cellText.includes(',') || cellText.includes('"') || cellText.includes('\n')) {
+                cellText = '"' + cellText.replace(/"/g, '""') + '"';
+            }
+            row.push(cellText);
         }
-        
+
         csv.push(row.join(','));
     }
-    
-    var csvContent = csv.join('\n');
-    var blob = new Blob([csvContent], { type: 'text/csv' });
+
+    // Add UTF-8 BOM for proper encoding
+    var csvContent = '\uFEFF' + csv.join('\n');
+
+    // Create blob with UTF-8 encoding
+    var blob = new Blob([csvContent], {
+        type: 'text/csv;charset=utf-8;'
+    });
+
     var url = window.URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
-    a.download = filename || 'export.csv';
+
+    // Ensure filename has .csv extension
+    var finalFilename = filename || 'export.csv';
+    if (!finalFilename.endsWith('.csv')) {
+        finalFilename += '.csv';
+    }
+
+    a.download = finalFilename;
     a.click();
     window.URL.revokeObjectURL(url);
+}
+
+// Export table to Excel (XLSX) with UTF-8 encoding
+function exportTableToExcel(tableId, filename, sheetName) {
+    var table = document.getElementById(tableId);
+    var data = [];
+    var rows = table.querySelectorAll('tr');
+
+    // Extract table data
+    for (var i = 0; i < rows.length; i++) {
+        var row = [];
+        var cols = rows[i].querySelectorAll('td, th');
+
+        for (var j = 0; j < cols.length; j++) {
+            row.push(cols[j].textContent.trim());
+        }
+
+        data.push(row);
+    }
+
+    // Create workbook
+    var wb = XLSX.utils.book_new();
+    var ws = XLSX.utils.aoa_to_sheet(data);
+
+    // Add worksheet to workbook
+    XLSX.utils.book_append_sheet(wb, ws, sheetName || 'Sheet1');
+
+    // Ensure filename has .xlsx extension
+    var finalFilename = filename || 'export.xlsx';
+    if (!finalFilename.endsWith('.xlsx')) {
+        finalFilename = finalFilename.replace('.xls', '') + '.xlsx';
+    }
+
+    // Write file with UTF-8 encoding
+    XLSX.writeFile(wb, finalFilename, {
+        bookType: 'xlsx',
+        type: 'binary',
+        compression: true
+    });
 }

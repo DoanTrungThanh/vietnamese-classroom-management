@@ -469,3 +469,81 @@ def create_donation_record():
 
     return render_template('financial/create_donation_record_tailwind.html',
                          title='Tạo bản ghi quyên góp', form=form)
+
+@bp.route('/transactions/export')
+@login_required
+@admin_or_manager_required
+def export_transactions():
+    """Export financial transactions to Excel"""
+    try:
+        from app.utils.excel_export import export_financial_transactions_to_excel
+
+        # Get filter parameters
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        transaction_type = request.args.get('type')
+
+        # Build query
+        query = Finance.query
+
+        if start_date:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+            query = query.filter(Finance.transaction_date >= start_date)
+
+        if end_date:
+            end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+            query = query.filter(Finance.transaction_date <= end_date)
+
+        if transaction_type and transaction_type != 'all':
+            query = query.filter(Finance.type == transaction_type)
+
+        # Filter by manager's classes if not admin
+        if current_user.is_manager():
+            managed_class_ids = [c.id for c in Class.query.filter_by(manager_id=current_user.id, is_active=True)]
+            query = query.filter(
+                (Finance.class_id.in_(managed_class_ids)) |
+                (Finance.class_id.is_(None))
+            )
+
+        transactions = query.order_by(Finance.transaction_date.desc()).all()
+
+        response = export_financial_transactions_to_excel(transactions)
+        if response:
+            return response
+        else:
+            flash('Có lỗi xảy ra khi xuất file Excel', 'error')
+            return redirect(url_for('financial.transactions'))
+
+    except Exception as e:
+        flash(f'Có lỗi xảy ra: {str(e)}', 'error')
+        return redirect(url_for('financial.transactions'))
+
+@bp.route('/donations/export')
+@login_required
+@admin_or_manager_required
+def export_donations():
+    """Export donations to Excel"""
+    try:
+        from app.utils.excel_export import export_donations_to_excel
+
+        # Get filter parameters
+        status = request.args.get('status')
+
+        # Build query
+        query = Donation.query
+
+        if status and status != 'all':
+            query = query.filter(Donation.status == status)
+
+        donations = query.order_by(Donation.donation_date.desc()).all()
+
+        response = export_donations_to_excel(donations)
+        if response:
+            return response
+        else:
+            flash('Có lỗi xảy ra khi xuất file Excel', 'error')
+            return redirect(url_for('financial.donations'))
+
+    except Exception as e:
+        flash(f'Có lỗi xảy ra: {str(e)}', 'error')
+        return redirect(url_for('financial.donations'))

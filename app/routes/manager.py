@@ -1669,6 +1669,24 @@ def notification_generator():
                          classes=classes,
                          today=today)
 
+@bp.route('/events/export')
+@login_required
+@manager_required
+def export_events():
+    """Export events to Excel"""
+    try:
+        from app.utils.excel_export import export_events_to_excel
+        events = Event.query.filter_by(is_active=True).order_by(Event.start_datetime.desc()).all()
+        response = export_events_to_excel(events)
+        if response:
+            return response
+        else:
+            flash('Có lỗi xảy ra khi xuất file Excel', 'error')
+            return redirect(url_for('main.dashboard'))
+    except Exception as e:
+        flash(f'Có lỗi xảy ra: {str(e)}', 'error')
+        return redirect(url_for('main.dashboard'))
+
 @bp.route('/notification/generate', methods=['POST'])
 @login_required
 @manager_required
