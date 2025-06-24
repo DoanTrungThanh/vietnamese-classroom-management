@@ -1,10 +1,8 @@
 import io
-import pandas as pd
 from flask import make_response
 from datetime import datetime
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-from openpyxl.utils.dataframe import dataframe_to_rows
 import urllib.parse
 
 def create_excel_response(data, filename, sheet_name='Sheet1'):
@@ -15,28 +13,32 @@ def create_excel_response(data, filename, sheet_name='Sheet1'):
         # Create Excel file in memory
         output = io.BytesIO()
 
-        # Create DataFrame with UTF-8 encoding
-        df = pd.DataFrame(data)
-
         # Create workbook and worksheet
         wb = Workbook()
         ws = wb.active
         ws.title = sheet_name
 
-        # Add data to worksheet
-        for r in dataframe_to_rows(df, index=False, header=True):
-            ws.append(r)
+        # Add headers if data exists
+        if data:
+            headers = list(data[0].keys())
+            ws.append(headers)
 
-        # Style the header row
-        header_font = Font(bold=True, color="FFFFFF")
-        header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
-        header_alignment = Alignment(horizontal="center", vertical="center")
+            # Add data rows
+            for row_data in data:
+                row = [row_data.get(header, '') for header in headers]
+                ws.append(row)
 
-        # Apply header styling
-        for cell in ws[1]:
-            cell.font = header_font
-            cell.fill = header_fill
-            cell.alignment = header_alignment
+        # Style the header row if data exists
+        if data and ws.max_row > 0:
+            header_font = Font(bold=True, color="FFFFFF")
+            header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+            header_alignment = Alignment(horizontal="center", vertical="center")
+
+            # Apply header styling to first row
+            for cell in ws[1]:
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = header_alignment
 
         # Auto-adjust column widths
         for column in ws.columns:

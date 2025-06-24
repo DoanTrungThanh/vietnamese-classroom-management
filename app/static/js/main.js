@@ -356,41 +356,49 @@ function exportTableToCSV(tableId, filename) {
     window.URL.revokeObjectURL(url);
 }
 
-// Export table to Excel (XLSX) with UTF-8 encoding
+// Export table to Excel (fallback to CSV if XLSX not available)
 function exportTableToExcel(tableId, filename, sheetName) {
-    var table = document.getElementById(tableId);
-    var data = [];
-    var rows = table.querySelectorAll('tr');
+    // Check if XLSX library is available
+    if (typeof XLSX !== 'undefined') {
+        var table = document.getElementById(tableId);
+        var data = [];
+        var rows = table.querySelectorAll('tr');
 
-    // Extract table data
-    for (var i = 0; i < rows.length; i++) {
-        var row = [];
-        var cols = rows[i].querySelectorAll('td, th');
+        // Extract table data
+        for (var i = 0; i < rows.length; i++) {
+            var row = [];
+            var cols = rows[i].querySelectorAll('td, th');
 
-        for (var j = 0; j < cols.length; j++) {
-            row.push(cols[j].textContent.trim());
+            for (var j = 0; j < cols.length; j++) {
+                row.push(cols[j].textContent.trim());
+            }
+
+            data.push(row);
         }
 
-        data.push(row);
+        // Create workbook
+        var wb = XLSX.utils.book_new();
+        var ws = XLSX.utils.aoa_to_sheet(data);
+
+        // Add worksheet to workbook
+        XLSX.utils.book_append_sheet(wb, ws, sheetName || 'Sheet1');
+
+        // Ensure filename has .xlsx extension
+        var finalFilename = filename || 'export.xlsx';
+        if (!finalFilename.endsWith('.xlsx')) {
+            finalFilename = finalFilename.replace('.xls', '') + '.xlsx';
+        }
+
+        // Write file with UTF-8 encoding
+        XLSX.writeFile(wb, finalFilename, {
+            bookType: 'xlsx',
+            type: 'binary',
+            compression: true
+        });
+    } else {
+        // Fallback to CSV export
+        console.log('XLSX library not available, falling back to CSV export');
+        var csvFilename = filename ? filename.replace('.xlsx', '.csv').replace('.xls', '.csv') : 'export.csv';
+        exportTableToCSV(tableId, csvFilename);
     }
-
-    // Create workbook
-    var wb = XLSX.utils.book_new();
-    var ws = XLSX.utils.aoa_to_sheet(data);
-
-    // Add worksheet to workbook
-    XLSX.utils.book_append_sheet(wb, ws, sheetName || 'Sheet1');
-
-    // Ensure filename has .xlsx extension
-    var finalFilename = filename || 'export.xlsx';
-    if (!finalFilename.endsWith('.xlsx')) {
-        finalFilename = finalFilename.replace('.xls', '') + '.xlsx';
-    }
-
-    // Write file with UTF-8 encoding
-    XLSX.writeFile(wb, finalFilename, {
-        bookType: 'xlsx',
-        type: 'binary',
-        compression: true
-    });
 }
