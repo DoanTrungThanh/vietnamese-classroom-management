@@ -8,14 +8,22 @@
             <i class="fas fa-chart-line text-green-500 mr-2"></i>
             Quản lý tài chính
         </h1>
-        <div class="flex space-x-3">
-            <a href="{{ url_for('financial.create_transaction') }}" 
+        <div class="flex flex-wrap gap-3">
+            <a href="{{ url_for('financial.create_transaction') }}"
                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-200">
                 <i class="fas fa-plus mr-2"></i>Thêm giao dịch
             </a>
-            <a href="{{ url_for('financial.create_donation') }}" 
+            <a href="{{ url_for('financial.create_donation') }}"
                class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition duration-200">
                 <i class="fas fa-gift mr-2"></i>Nhận quyên góp
+            </a>
+            <a href="{{ url_for('financial.donations') }}"
+               class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition duration-200">
+                <i class="fas fa-list mr-2"></i>Danh sách tài sản
+            </a>
+            <a href="{{ url_for('financial.donations', status='received') }}"
+               class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition duration-200">
+                <i class="fas fa-share mr-2"></i>Phân phối tài sản
             </a>
         </div>
     </div>
@@ -92,6 +100,37 @@
         </div>
     </div>
 
+    <!-- Assets Pending Distribution -->
+    {% if available_assets > 0 %}
+    <div class="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-lg p-6 mb-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-orange-500 text-2xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-medium text-orange-800">
+                        Có {{ available_assets }} tài sản chờ phân phối
+                    </h3>
+                    <p class="text-orange-600">
+                        Các tài sản quyên góp đã nhận và đang chờ được phân phối cho học sinh
+                    </p>
+                </div>
+            </div>
+            <div class="flex space-x-3">
+                <a href="{{ url_for('financial.donations', status='received') }}"
+                   class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition duration-200">
+                    <i class="fas fa-share mr-2"></i>Phân phối ngay
+                </a>
+                <a href="{{ url_for('financial.donations') }}"
+                   class="bg-white hover:bg-gray-50 text-orange-600 border border-orange-300 px-4 py-2 rounded-lg transition duration-200">
+                    <i class="fas fa-list mr-2"></i>Xem danh sách
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Quick Actions -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <!-- Quick Links -->
@@ -100,16 +139,21 @@
                 <i class="fas fa-bolt text-yellow-500 mr-2"></i>
                 Thao tác nhanh
             </h3>
-            <div class="grid grid-cols-2 gap-4">
-                <a href="{{ url_for('financial.transactions') }}" 
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                <a href="{{ url_for('financial.transactions') }}"
                    class="flex items-center p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition duration-200">
                     <i class="fas fa-exchange-alt text-blue-500 mr-3"></i>
                     <span class="text-sm font-medium text-blue-700">Quản lý thu chi</span>
                 </a>
-                <a href="{{ url_for('financial.donations') }}" 
+                <a href="{{ url_for('financial.donations') }}"
                    class="flex items-center p-3 bg-green-50 hover:bg-green-100 rounded-lg transition duration-200">
                     <i class="fas fa-hands-helping text-green-500 mr-3"></i>
                     <span class="text-sm font-medium text-green-700">Tài sản quyên góp</span>
+                </a>
+                <a href="{{ url_for('financial.donations', status='received') }}"
+                   class="flex items-center p-3 bg-orange-50 hover:bg-orange-100 rounded-lg transition duration-200">
+                    <i class="fas fa-share text-orange-500 mr-3"></i>
+                    <span class="text-sm font-medium text-orange-700">Phân phối tài sản</span>
                 </a>
                 <a href="{{ url_for('financial.reports') }}"
                    class="flex items-center p-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition duration-200">
@@ -121,29 +165,51 @@
                     <i class="fas fa-book text-red-500 mr-3"></i>
                     <span class="text-sm font-medium text-red-700">Bản ghi quyên góp</span>
                 </a>
+                <a href="{{ url_for('financial.donations', status='distributed') }}"
+                   class="flex items-center p-3 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition duration-200">
+                    <i class="fas fa-check-circle text-indigo-500 mr-3"></i>
+                    <span class="text-sm font-medium text-indigo-700">Đã phân phối</span>
+                </a>
             </div>
         </div>
 
         <!-- Recent Donations -->
         <div class="bg-white rounded-lg shadow-md p-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">
-                <i class="fas fa-gift text-green-500 mr-2"></i>
-                Quyên góp gần đây
-            </h3>
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">
+                    <i class="fas fa-gift text-green-500 mr-2"></i>
+                    Quyên góp gần đây
+                </h3>
+                <a href="{{ url_for('financial.donations') }}"
+                   class="text-green-600 hover:text-green-800 text-sm font-medium">
+                    Xem tất cả →
+                </a>
+            </div>
             {% if recent_donations %}
                 <div class="space-y-3">
                     {% for donation in recent_donations %}
-                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition duration-200">
                         <div class="flex-1">
                             <p class="font-medium text-gray-800">{{ donation.asset_name }}</p>
-                            <p class="text-sm text-gray-500">{{ donation.donor_name or 'Ẩn danh' }}</p>
+                            <p class="text-sm text-gray-500">{{ donation.donor_name or 'Ẩn danh' }} • {{ donation.quantity }} {{ 'cái' if donation.quantity > 1 else 'cái' }}</p>
+                            {% if donation.estimated_value %}
+                                <p class="text-xs text-green-600">~{{ "{:,.0f}".format(donation.estimated_value) }} VNĐ</p>
+                            {% endif %}
                         </div>
                         <div class="text-right">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                       bg-{{ donation.status_color }}-100 text-{{ donation.status_color }}-800">
-                                {{ donation.status_display }}
-                            </span>
-                            <p class="text-xs text-gray-500 mt-1">{{ donation.donation_date.strftime('%d/%m/%Y') }}</p>
+                            <div class="flex items-center space-x-2 mb-1">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                           bg-{{ donation.status_color }}-100 text-{{ donation.status_color }}-800">
+                                    {{ donation.status_display }}
+                                </span>
+                                {% if donation.status == 'received' %}
+                                    <a href="{{ url_for('financial.distribute_donation', id=donation.id) }}"
+                                       class="text-orange-600 hover:text-orange-800 text-xs" title="Phân phối">
+                                        <i class="fas fa-share"></i>
+                                    </a>
+                                {% endif %}
+                            </div>
+                            <p class="text-xs text-gray-500">{{ donation.donation_date.strftime('%d/%m/%Y') }}</p>
                         </div>
                     </div>
                     {% endfor %}
