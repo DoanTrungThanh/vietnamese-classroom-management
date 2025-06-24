@@ -1,0 +1,33 @@
+RewriteEngine On
+
+# Enable CGI for Python files
+AddHandler cgi-script .cgi .py
+Options +ExecCGI
+
+# Redirect all requests to index.cgi
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !^/index\.cgi
+RewriteRule ^(.*)$ /index.cgi/$1 [QSA,L]
+
+# Security headers
+Header always set X-Content-Type-Options nosniff
+Header always set X-Frame-Options DENY
+Header always set X-XSS-Protection "1; mode=block"
+
+# Hide sensitive files
+<Files ".env">
+    Order allow,deny
+    Deny from all
+</Files>
+
+<Files "config.py">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Cache static files
+<FilesMatch "\.(css|js|png|jpg|jpeg|gif|ico|svg)$">
+    ExpiresActive On
+    ExpiresDefault "access plus 1 month"
+</FilesMatch>

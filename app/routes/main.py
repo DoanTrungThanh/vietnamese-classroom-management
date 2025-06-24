@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for
+from flask import Blueprint, render_template, redirect, url_for, jsonify
 from flask_login import login_required, current_user
 from app.models.user import User
 from app.models.class_model import Class
@@ -87,3 +87,21 @@ def dashboard():
 
     return render_template('dashboard_tailwind.html', title='Dashboard', stats=stats,
                          recent_events=recent_events, today_schedules=today_schedules)
+
+@bp.route('/health')
+def health_check():
+    """Health check endpoint for Render"""
+    try:
+        # Simple database check
+        db.session.execute('SELECT 1')
+        return jsonify({
+            'status': 'healthy',
+            'message': 'Vietnamese Classroom Management System is running',
+            'database': 'connected'
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'status': 'unhealthy',
+            'message': 'Database connection failed',
+            'error': str(e)
+        }), 500
