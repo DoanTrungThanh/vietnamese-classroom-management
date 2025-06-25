@@ -31,3 +31,7 @@ gunicorn==21.2.0
 
 # Database drivers
 psycopg2-binary==2.9.9
+
+# Firebase integration
+firebase-admin==6.2.0
+google-cloud-firestore==2.11.1

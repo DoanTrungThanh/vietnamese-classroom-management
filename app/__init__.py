@@ -4,6 +4,7 @@ from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
 from config import Config
+import os
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -11,6 +12,9 @@ login = LoginManager()
 csrf = CSRFProtect()
 login.login_view = 'auth.login'
 login.login_message = 'Vui lòng đăng nhập để truy cập trang này.'
+
+# Firebase flag
+USE_FIREBASE = os.environ.get('USE_FIREBASE', 'false').lower() == 'true'
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -29,6 +33,23 @@ def create_app(config_class=Config):
             return dict(csrf_token=generate_csrf)
         except:
             return dict(csrf_token='')
+
+    # Initialize Firebase if enabled
+    if USE_FIREBASE:
+        from app.firebase_config import init_firebase
+        init_firebase(app)
+
+        # Firebase user loader
+        @login.user_loader
+        def load_user(user_id):
+            from app.auth.firebase_auth import FirebaseUser
+            return FirebaseUser.get(user_id)
+    else:
+        # SQLAlchemy user loader
+        @login.user_loader
+        def load_user(user_id):
+            from app.models.user import User
+            return User.query.get(int(user_id))
 
     from app.routes import main, auth, admin, manager, teacher, user, finance, calendar, expense, financial, api
     app.register_blueprint(main.bp)
