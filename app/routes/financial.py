@@ -19,6 +19,15 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def admin_or_manager_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or not (current_user.is_admin() or current_user.is_manager()):
+            flash('Bạn không có quyền truy cập trang này.', 'error')
+            return redirect(url_for('main.dashboard'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 @bp.route('/')
 @login_required
 @admin_required
